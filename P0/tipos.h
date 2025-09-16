@@ -18,11 +18,11 @@ typedef struct type_args
     int length;
 } type_args;
 
-// forward declaration for list
-typedef struct t_node *t_pos_historic;
+//* forward declaration for list
+typedef struct t_node_historic *t_pos_historic;
 typedef t_pos_historic t_list_historic;
 
-typedef struct t_node *t_pos_file;
+typedef struct t_node_file *t_pos_file;
 typedef t_pos_file t_list_file;
 
 typedef struct t_lists
@@ -30,7 +30,7 @@ typedef struct t_lists
     t_list_historic historic;
     t_list_file file;
 } t_lists;
-// end of forward declaration
+//* end of forward declaration
 
 typedef struct t_command
 {
