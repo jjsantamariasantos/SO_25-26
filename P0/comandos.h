@@ -17,4 +17,5 @@ void cmd_listopen(type_args args, t_lists *lists);
 void cmd_infosys(type_args args, t_lists *lists);
 void cmd_help(type_args args, t_lists *lists);
 void cmd_exit_quit_bye(type_args args, t_lists *lists);
+
 #endif /*COMANDOS_H*/

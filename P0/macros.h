@@ -12,10 +12,10 @@
 //* end of macros for general use
 
 //* macros for authors command
-#define AUTHOR_NAME1 "Jesús José Santamaría Santos"
-#define AUTHOR_LOGIN1 "j.j.ssantos@udc.es"
-#define AUTHOR_NAME2 "José Comerón Lado"
-#define AUTHOR_LOGIN2 "jose.comeronl@udc.es"
+#define AUTHOR_NAME_1 "Jesús José Santamaría Santos"
+#define AUTHOR_LOGIN_1 "j.j.ssantos@udc.es"
+#define AUTHOR_NAME_2 "José Comerón Lado"
+#define AUTHOR_LOGIN_2 "jose.comeronl@udc.es"
 //* end of macros for authors command 
 
 //*macros for help texts
