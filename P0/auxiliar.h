@@ -8,6 +8,17 @@
 
 
 void print_prompt();
-void read_input(t_lists *L);
+bool read_input(t_lists *L);
+void process_input(t_lists *L, bool *exit_shell);
+int cut_input(char *input, char *args[]);
+void select_command(type_args args, char *input ,t_lists *L, bool *exit_shell);
+void free_historic_list(t_list_historic *L);
+void free_file_list(t_list_file *L);
+void print_error(char * name, char *msg);
+void print_system_error(char * name);
+int get_commands_length();
+void get_commands(t_command *commands_pointer);
+void initialize_lists(t_lists *L);
+bool string_to_int(char *str, int *num);
 
 #endif /*AUXILIAR_H*/
