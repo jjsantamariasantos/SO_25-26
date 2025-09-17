@@ -1,5 +1,5 @@
-#ifndef TIPOS_H
-#define TIPOS_H
+#ifndef TYPES_H
+#define TYPES_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +28,7 @@ typedef t_pos_file t_list_file;
 typedef struct t_lists
 {
     t_list_historic historic;
-    t_list_file file;
+    t_list_file files;
 } t_lists;
 //* end of forward declaration
 
@@ -40,4 +40,4 @@ typedef struct t_command
     char *long_help;
 } t_command;
 
-#endif /* TIPOS_H */
+#endif /* TYPES_H */

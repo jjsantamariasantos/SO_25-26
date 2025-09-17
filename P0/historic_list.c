@@ -1,4 +1,4 @@
-#include "lista_historial.h"
+#include "historic_list.h"
 
 bool create_node(t_pos_historic *new_node){
     *new_node = (t_pos_historic)malloc(sizeof(struct t_node_historic));

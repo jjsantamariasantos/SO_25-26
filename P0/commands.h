@@ -1,8 +1,8 @@
-#ifndef COMANDOS_H
-#define COMANDOS_H
-#include "tipos.h"
-#include "lista_historial.h"
-#include "lista_ficheros.h"
+#ifndef COMANNDS_H
+#define COMANNDS_H
+#include "types.h"
+#include "historic_list.h"
+#include "file_list.h"
 
 void cmd_authors(type_args args, t_lists *lists);
 void cmd_getpid(type_args args, t_lists *lists);
@@ -18,4 +18,4 @@ void cmd_infosys(type_args args, t_lists *lists);
 void cmd_help(type_args args, t_lists *lists);
 void cmd_exit_quit_bye(type_args args, t_lists *lists);
 
-#endif /*COMANDOS_H*/
+#endif /*COMANNDS_H*/

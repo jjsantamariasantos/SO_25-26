@@ -1,4 +1,4 @@
-#include "lista_ficheros.h"
+#include "file_list.h"
 
 bool create_node_file(t_pos_file *new_node){
     *new_node = (t_pos_file)malloc(sizeof(struct t_node_file));
@@ -105,9 +105,9 @@ t_item_file get_item_file(t_pos_file p, t_list_file L){
     return p->item;
 }
 
-t_pos_file find_item_file(int df, t_list_file L){
+t_pos_file find_item_file(int fd, t_list_file L){
     t_pos_file aux;
 
-    for(aux = L; (aux != FNULL) && (aux->item.df != df); aux = aux->next);
+    for(aux = L; (aux != FNULL) && (aux->item.fd != fd); aux = aux->next);
     return aux;
 }

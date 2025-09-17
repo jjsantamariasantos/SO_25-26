@@ -1,15 +1,16 @@
-#ifndef LISTA_FICHEROS_H
-#define LISTA_FICHEROS_H
+#ifndef FILE_LIST_H
+#define FILE_LIST_H
 
-#include "tipos.h"
+#include "types.h"
 
 #define FNULL NULL
 
 typedef struct t_item_file{
-    int df;
+    int fd;
     char *file_name[MAX_INPUT_SIZE];
     int mode;
 } t_item_file;
+
 typedef struct t_node_file{
     t_item_file item;
     struct t_node_file *prev;
@@ -28,6 +29,6 @@ bool insert_item_file(t_item_file d, t_pos_file p, t_list_file *L);
 void delete_at_position_file(t_pos_file p, t_list_file *L);
 void update_item_file(t_item_file d, t_pos_file p, t_list_file *L);
 t_item_file get_item_file(t_pos_file p, t_list_file L);
-t_pos_file find_item_file(int df, t_list_file L);
+t_pos_file find_item_file(int fd, t_list_file L);
 
-#endif  /*LISTA_FICHEROS_H*/
+#endif  /*FILE_LIST_H*/

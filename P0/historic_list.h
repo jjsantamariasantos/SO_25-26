@@ -1,7 +1,7 @@
-#ifndef LISTA_HISTORIAL_H
-#define LISTA_HISTORIAL_H
+#ifndef HISTORIC_LIST_H
+#define HISTORIC_LIST_H
 
-#include "tipos.h"
+#include "types.h"
 
 #define HNULL NULL
 
@@ -29,4 +29,4 @@ void delete_at_position_historic(t_pos_historic p, t_list_historic *L);
 void delete_list_historic(t_list_historic *L);
 t_item_historic get_item_historic(t_pos_historic p, t_list_historic L);
 
-#endif /*LISTA_HISTORIAL_H*/
+#endif /*HISTORIC_LIST_H*/
