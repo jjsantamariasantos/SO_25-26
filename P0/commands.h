@@ -16,6 +16,6 @@ void cmd_dup(type_args args, t_lists *lists);
 void cmd_listopen(type_args args, t_lists *lists);
 void cmd_infosys(type_args args, t_lists *lists);
 void cmd_help(type_args args, t_lists *lists);
-void cmd_exit_quit_bye(type_args args, t_lists *lists);
+void cmd_exit_quit_bye(type_args args, bool *exit_shell);
 
 #endif /*COMANNDS_H*/

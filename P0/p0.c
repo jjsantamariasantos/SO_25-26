@@ -17,7 +17,10 @@ void shell_loop(){
     bool exit_shell = false;
     t_lists L;
 
-    initialize_lists(&L);
+    create_empty_list_historic(&L.historic);
+    create_empty_list_file(&L.files);
+    
+    initialize_file_list(&L.files);
 
     while(!exit_shell){
         print_prompt();

@@ -8,6 +8,7 @@
 #define MAX_INPUT_SIZE 64
 #define SNULL -1
 #define ARGS_MAX 10
+#define PREDEFINED_DF 9
 #define UNUSED(f) do { (void)(f); } while (0) //* to avoid warnings of unused variables
 //* end of macros for general use
 

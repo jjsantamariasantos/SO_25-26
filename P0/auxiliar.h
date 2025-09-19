@@ -17,8 +17,8 @@ void free_file_list(t_list_file *L);
 void print_error(char * name, char *msg);
 void print_system_error(char * name);
 int get_commands_length();
-void get_commands(t_command *commands_pointer);
-void initialize_lists(t_lists *L);
+void get_commands(t_command *commands_copy);
+void initialize_file_list(t_list_file *L);
 bool string_to_int(char *str, int *num);
 
 #endif /*AUXILIAR_H*/
