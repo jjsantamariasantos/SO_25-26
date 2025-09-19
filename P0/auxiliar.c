@@ -16,6 +16,7 @@ t_command commands[]=
     {"help", cmd_help, SHORT_HELP_HELP, LONG_HELP_HELP},
     {NULL, NULL, NULL, NULL}
 };
+
 int get_input(char * input){
     int length, tab;
 
