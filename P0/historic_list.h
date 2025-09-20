@@ -6,7 +6,7 @@
 #define HNULL NULL
 
 typedef struct t_item_historic{
-    char *command[MAX_INPUT_SIZE];
+    char command[MAX_INPUT_SIZE];
     int num_command;
 } t_item_historic;
 
@@ -14,7 +14,7 @@ typedef struct t_node_historic{
     t_item_historic item;
     struct t_node_historic *prev;
     struct t_node_historic *next;
-} t_node;
+} t_node_historic;
 
 typedef t_pos_historic t_list_historic;
 

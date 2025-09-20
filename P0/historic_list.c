@@ -1,7 +1,7 @@
 #include "historic_list.h"
 
 //*auxiliary functions
-bool create_node(t_pos_historic *new_node);
+bool create_node_historic(t_pos_historic *new_node);
 //*end of auxiliary functions
 
 void create_empty_list_historic(t_list_historic *L){
@@ -30,7 +30,7 @@ t_pos_historic previous_position_historic(t_pos_historic p, t_list_historic L){
 
 bool insert_item_historic(t_item_historic d, t_pos_historic p, t_list_historic *L){
     t_pos_historic new_node;
-    if (!create_node(&new_node))
+    if (!create_node_historic(&new_node))
         return false;
     new_node->item = d;
     new_node->next = HNULL;
@@ -98,7 +98,7 @@ t_item_historic get_item_historic(t_pos_historic p, t_list_historic L){
     return p->item;
 }
 
-bool create_node(t_pos_historic *new_node){
+bool create_node_historic(t_pos_historic *new_node){
     *new_node = (t_pos_historic)malloc(sizeof(struct t_node_historic));
     if (*new_node == NULL)
     {

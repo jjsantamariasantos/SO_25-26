@@ -7,7 +7,7 @@
 
 typedef struct t_item_file{
     int fd;
-    char *file_name[MAX_INPUT_SIZE];
+    char file_name[MAX_INPUT_SIZE];
     int mode;
 } t_item_file;
 

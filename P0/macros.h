@@ -5,10 +5,10 @@
 #define PROMPT "P0:~$ "  
 
 //* macros for general use
-#define MAX_INPUT_SIZE 64
+#define MAX_INPUT_SIZE 1024
 #define SNULL -1
 #define ARGS_MAX 10
-#define PREDEFINED_DF 9
+#define PREDEFINED_DF 10
 #define UNUSED(f) do { (void)(f); } while (0) //* to avoid warnings of unused variables
 //* end of macros for general use
 

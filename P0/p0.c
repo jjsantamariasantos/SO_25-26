@@ -13,7 +13,6 @@ int main(int argc, char *argv[], char *envp[]){
 }
 
 void shell_loop(){
-    char input[MAX_INPUT_SIZE];
     bool exit_shell = false;
     t_lists L;
 
