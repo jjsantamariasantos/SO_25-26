@@ -16,28 +16,9 @@ t_command commands[]=
     {"help", cmd_help, SHORT_HELP_HELP, LONG_HELP_HELP},
     {NULL, NULL, NULL, NULL}
 };
-
-int get_input(char * input){
-    int length, tab;
-
-    if(fgets(input, MAX_INPUT_SIZE, stdin) == NULL)
-        perror("Error reading input");
-    
-    tab = strspn(input, " \t");
-
-    if(tab > 0){
-        memmove(input, input + tab, strlen(input) - tab + 1); //* overwrite the tabs moving the characters to the left
-    }
-
-    length = strlen(input);
-
-    if(length > 0 && input[length - 1] == '\n'){
-        input[length - 1] = '\0';
-        length--;
-    }
-
-    return length;
-}
+//*auxiliary functions
+    int get_input(char * input);
+//*end of auxiliary functions
 
 void print_prompt(){
     printf(PROMPT);
@@ -191,4 +172,26 @@ bool string_to_int(char *str, int *num){
     }
 
     return true;
+}
+
+int get_input(char * input){
+    int length, tab;
+
+    if(fgets(input, MAX_INPUT_SIZE, stdin) == NULL)
+        perror("Error reading input");
+    
+    tab = strspn(input, " \t");
+
+    if(tab > 0){
+        memmove(input, input + tab, strlen(input) - tab + 1); //* overwrite the tabs moving the characters to the left
+    }
+
+    length = strlen(input);
+
+    if(length > 0 && input[length - 1] == '\n'){
+        input[length - 1] = '\0';
+        length--;
+    }
+
+    return length;
 }

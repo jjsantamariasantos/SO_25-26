@@ -1,8 +1,10 @@
 #ifndef COMANNDS_H
 #define COMANNDS_H
+
 #include "types.h"
 #include "historic_list.h"
 #include "file_list.h"
+#include "auxiliar.h"
 
 void cmd_authors(type_args args, t_lists *lists);
 void cmd_getpid(type_args args, t_lists *lists);

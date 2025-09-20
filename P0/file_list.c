@@ -1,14 +1,9 @@
 #include "file_list.h"
 
-bool create_node_file(t_pos_file *new_node){
-    *new_node = (t_pos_file)malloc(sizeof(struct t_node_file));
-    if (*new_node == NULL)
-    {
-        return false;
-    }
 
-    return true;
-}
+//*auxiliary functions
+bool create_node_file(t_pos_file *new_node);
+//*end auxiliary functions
 
 void create_empty_list_file(t_list_file *L){
     *L = FNULL;
@@ -110,4 +105,15 @@ t_pos_file find_item_file(int fd, t_list_file L){
 
     for(aux = L; (aux != FNULL) && (aux->item.fd != fd); aux = aux->next);
     return aux;
+}
+
+
+bool create_node_file(t_pos_file *new_node){
+    *new_node = (t_pos_file)malloc(sizeof(struct t_node_file));
+    if (*new_node == NULL)
+    {
+        return false;
+    }
+
+    return true;
 }

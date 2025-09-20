@@ -1,14 +1,8 @@
 #include "historic_list.h"
 
-bool create_node(t_pos_historic *new_node){
-    *new_node = (t_pos_historic)malloc(sizeof(struct t_node_historic));
-    if (*new_node == NULL)
-    {
-        return false;
-    }
-
-    return true;
-}
+//*auxiliary functions
+bool create_node(t_pos_historic *new_node);
+//*end of auxiliary functions
 
 void create_empty_list_historic(t_list_historic *L){
     *L = HNULL;
@@ -102,4 +96,14 @@ void delete_list_historic(t_list_historic *L){
 t_item_historic get_item_historic(t_pos_historic p, t_list_historic L){
     UNUSED(L);
     return p->item;
+}
+
+bool create_node(t_pos_historic *new_node){
+    *new_node = (t_pos_historic)malloc(sizeof(struct t_node_historic));
+    if (*new_node == NULL)
+    {
+        return false;
+    }
+
+    return true;
 }
