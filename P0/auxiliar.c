@@ -15,6 +15,7 @@ t_command commands[] =
         {"infosys", cmd_infosys, SHORT_HELP_INFOSYS, LONG_HELP_INFOSYS},
         {"help", cmd_help, SHORT_HELP_HELP, LONG_HELP_HELP},
         {NULL, NULL, NULL, NULL}};
+        
 //*auxiliary functions
 int get_input(char *input);
 //*end of auxiliary functions

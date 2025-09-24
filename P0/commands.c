@@ -1,8 +1,14 @@
 #include "commands.h"
 
 //*auxiliary functions for commands
+
+//* authors auxiliary functions
 void print_login();
 void print_authors();
+//*end of authors auxiliary functions
+
+//* date auxili
+
 //*historic auxiliary functions
 void print_historic(type_args args, t_list_historic *list);
 void print_historic_last_n_commands(type_args args, t_list_historic *list, int n);
@@ -37,117 +43,146 @@ void long_help_cmd(type_args args);
 
 //*end of auxiliary functions for commands
 
-void cmd_authors(type_args args, t_lists *lists) {
-     UNUSED(lists);
-    switch (args.length) {
-    case 1: 
+void cmd_authors(type_args args, t_lists *lists)
+{
+    UNUSED(lists);
+    switch (args.length)
+    {
+    case 1:
         print_authors();
         print_login();
         break;
-
     case 2:
-        if (strcmp(args.input[1], "-l") == 0) {
-           print_login();
-        } else if (strcmp(args.input[1], "-n") == 0) {
+        if (strcmp(args.input[1], "-l") == 0)
+            print_login();
+        else if (strcmp(args.input[1], "-n") == 0)
             print_authors();
-        } 
-        else {
-            print_error(args.input[1],"Invalid argument");
-        }
-        break;
+        else
+            print_error(args.input[1], "Invalid argument");
 
+        break;
+    case 3:
+        if (((strcmp(args.input[1], "-l") == 0) && (strcmp(args.input[2], "-n") == 0)) ||
+            ((strcmp(args.input[1], "-n") == 0) && (strcmp(args.input[2], "-l") == 0)))
+        {
+            print_authors();
+            print_login();
+        }
+        else
+            print_error(args.input[0], "Invalid argument");
+
+        break;
     default:
-        print_error(args.input[0], "Invalid argument");
+        print_error(args.input[0], "Invalid num of arguments");
         break;
     }
 }
 
-
-void cmd_getpid(type_args args, t_lists *lists) {
+void cmd_getpid(type_args args, t_lists *lists)
+{
     UNUSED(lists);
-    switch (args.length) {
+    switch (args.length)
+    {
     case 1: // solo "getpid"
         printf("PID: %d\n", getpid());
         break;
-
     case 2: // getpid -p
-        if (strcmp(args.input[1], "-p") == 0) {
+        if (strcmp(args.input[1], "-p") == 0)
             printf("Parent PID: %d\n", getppid());
-        } else {
+        else
             print_error(args.input[0], "Invalid argument");
-        }
-        break;
 
+        break;
     default:
-        print_error(args.input[0], "Invalid argument");
+        print_error(args.input[0], "Invalid num of arguments");
         break;
     }
 }
 
-void cmd_getcwd(type_args args, t_lists *lists) {
+void cmd_getcwd(type_args args, t_lists *lists)
+{
     char cwd[1024];
     UNUSED(lists);
-    if (args.length==1){
-        
-     if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    if (args.length == 1)
+    {
+        if (getcwd(cwd, sizeof(cwd)) != NULL)
+        {
             printf("Directorio actual: \033[1;34m%s\033[0m\n", cwd);
-     } else {
+        }
+        else
+        {
             perror("\033[31mgetcwd() error\033[0m");
         }
-}
+    }
+    else
+        print_error(args.input[0], "Invalid num of arguments");
 }
 
-void cmd_chdir(type_args args, t_lists *lists) {
+void cmd_chdir(type_args args, t_lists *lists)
+{
 
     UNUSED(lists);
-    switch (args.length) {
-    case 1: 
+    switch (args.length)
+    {
+    case 1:
         cmd_getcwd(args, lists);
         break;
 
     case 2: // chdir <dir>
-    if (chdir(args.input[1]) != 0) {
-        perror("\033[31mchdir() error\033[0m");
-    } else {
-        printf("Exitoso cambio a \033[1;34m%s\033[0m\n", args.input[1]);
-    }
+        if (chdir(args.input[1]) != 0)
+        {
+            perror("\033[31mchdir() error\033[0m");
+        }
+        else
+        {
+            printf("Exitoso cambio a \033[1;34m%s\033[0m\n", args.input[1]);
+        }
         break;
 
     default:
-        print_error(args.input[0], "Invalid argument");
+        print_error(args.input[0], "Invalid num of arguments");
         break;
     }
 }
 
-
-void cmd_date(type_args args, t_lists *lists) {
+void cmd_date(type_args args, t_lists *lists)
+{
     time_t now;
     time(&now);
     UNUSED(lists);
     struct tm *local = localtime(&now);
 
-    switch (args.length) {
-    case 1: 
+    switch (args.length)
+    {
+    case 1:
         printf("Dia:\n    %02d/%02d/%04d\n", local->tm_mday, local->tm_mon + 1, local->tm_year + 1900);
         printf("Hora:\n    %02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
         break;
 
-    case 2: 
-        if (strcmp(args.input[1], "-d") == 0) {
+    case 2:
+        if (strcmp(args.input[1], "-d") == 0)
             printf("Dia:\n    %02d/%02d/%04d\n", local->tm_mday, local->tm_mon + 1, local->tm_year + 1900);
-        } else if (strcmp(args.input[1], "-t") == 0) {
+        else if (strcmp(args.input[1], "-t") == 0)
             printf("Hora:\n    %02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
-        } else {
-            print_error(args.input[1],"Invalid argument");
-        }
-        break;
+        else
+            print_error(args.input[1], "Invalid argument");
 
+        break;
+    case 3:
+        if (((strcmp(args.input[1], "-d") == 0) && (strcmp(args.input[2], "-t") == 0)) ||
+            ((strcmp(args.input[1], "-t") == 0) && (strcmp(args.input[2], "-d") == 0)))
+        {
+            printf("Dia:\n    %02d/%02d/%04d\n", local->tm_mday, local->tm_mon + 1, local->tm_year + 1900);
+            printf("Hora:\n    %02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
+        } else
+            print_error(args.input[0], "Invalid argument");
+        
+        break;
     default:
-        print_error(args.input[0], "Invalid argument");
+        print_error(args.input[0], "Invalid num of arguments");
         break;
     }
 }
-
 
 void cmd_historic(type_args args, t_lists *lists)
 {
@@ -168,7 +203,7 @@ void cmd_historic(type_args args, t_lists *lists)
                     if (n > 0)
                         print_historic_last_n_commands(args, &lists->historic, n);
                     else
-                        print_error(args.input[0], "N must be a positive integer");
+                        print_error(args.input[1] + 1, "N must be a positive integer");
                 }
                 else if (strcmp(args.input[1], "-clear") == 0)
                     clear_historic(&lists->historic);
@@ -259,14 +294,17 @@ void cmd_list_open(type_args args, t_lists *lists)
     open_file_list(&lists->files);
 }
 
-void cmd_infosys(type_args args, t_lists *lists) {
+void cmd_infosys(type_args args, t_lists *lists)
+{
     UNUSED(args);
     UNUSED(lists);
     struct utsname buffer;
 
-    if (uname(&buffer) != 0) {
-        perror("uname failed"); 
+    if (uname(&buffer) != 0){
+        perror("uname failed");
+        return;
     }
+        
 
     printf("System Information:\n");
     printf("    Node Name:   %s\n", buffer.nodename);
@@ -321,14 +359,16 @@ void print_historic(type_args args, t_list_historic *list)
     else
         print_error(args.input[0], "Historic is empty");
 }
-void print_authors(){
-    printf("%s\n", AUTHOR_NAME_1);
-    printf("%s\n", AUTHOR_NAME_2);
+void print_authors()
+{
+    puts(AUTHOR_NAME_1);
+    puts(AUTHOR_NAME_2);
 }
 
-void print_login(){
-    printf("%s\n", AUTHOR_LOGIN_1);
-    printf("%s\n", AUTHOR_LOGIN_2);
+void print_login()
+{
+    puts(AUTHOR_LOGIN_1);
+    puts(AUTHOR_LOGIN_2);
 }
 void print_historic_last_n_commands(type_args args, t_list_historic *list, int n)
 {
