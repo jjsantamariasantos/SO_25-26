@@ -15,6 +15,8 @@ date: October 2025
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/utsname.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #include "macros.h"
 typedef struct type_args

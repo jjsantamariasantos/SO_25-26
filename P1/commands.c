@@ -8,6 +8,14 @@ date: October 2025
 
 //*auxiliary functions for commands
 
+//*multiple commands auxiliary functions
+int get_mode(type_args mode_str);
+void open_dir(type_args args, char *path, unsigned char flags, void function(type_args args, int n, unsigned char flags, char *full_path));
+char* build_path(char *relative_path, char *full_path);
+bool is_directory(type_args args, const char *path);
+void delete_aux(type_args args,void function(type_args args, int n, unsigned char flags ,char *full_path));
+//*end of multiple commands auxiliary functions
+
 //* authors auxiliary functions
 void print_login();
 void print_authors();
@@ -23,7 +31,6 @@ void count_historic(t_list_historic *list);
 
 //*open auxiliary functions
 void open_aux(type_args args, t_list_file *list);
-int get_mode(type_args mode_str); //* used to in list_open
 const char *mode_to_string(int mode);
 //*end of open auxiliary functions*/
 
@@ -44,6 +51,32 @@ void print_item_file(t_item_file item);
 void short_help_cmds();
 void long_help_cmd(type_args args);
 //*end of help auxiliary functions
+
+//*create auxiliary functions
+//*end of create auxiliary functions
+
+//*setdirparams auxiliary functions
+//*end of setdirparams auxiliary functions  
+
+//*getdirparams auxiliary functions
+//*end of getdirparams auxiliary functions
+
+//*dir auxiliary functions
+//*end of dir auxiliary functions   
+
+//*erase auxiliary functions
+void erase_aux(type_args args, int n, unsigned char flags ,char* full_path);
+//*end of erase auxiliary functions
+
+//*delrec auxiliary functions
+void delrec_aux(type_args args, int n, unsigned char flags ,char* full_path);
+//*end of delrec auxiliary functions    
+
+//*lseek auxiliary functions
+//*end of lseek auxiliary functions
+
+//*writestr auxiliary functions
+//*end of writestr auxiliary functions
 
 //*end of auxiliary functions for commands
 
@@ -733,3 +766,125 @@ void long_help_cmd(type_args args)
 }
 
 
+void open_dir(type_args args, char *path, unsigned char flags, void function(type_args args, int n, unsigned char flags, char *full_path))
+{
+    DIR *dir = opendir(path);
+    if(dir == NULL){
+        print_file_error(args.input[0], path);
+        return;
+    }
+    type_args new_args;
+    new_args.input[0] = args.input[0];
+    new_args.length = 2;
+
+    struct dirent *entry;
+    while((entry = readdir(dir)) != NULL){
+        if(!(flags & FLAG_AVOID) || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)){
+            new_args.input[1] = entry->d_name;
+            function(new_args, 1, flags, path);
+        }
+    }
+    closedir(dir);
+}
+
+char* build_path(char *relative_path, char *full_path)
+{
+    char *new_path;
+    if(full_path == NULL){
+        new_path = strdup(relative_path);
+    } else {
+        size_t length = strlen(full_path) + strlen(relative_path) + 2;
+        new_path = malloc(length * sizeof(char));
+        snprintf(new_path, length, "%s/%s", full_path, relative_path);
+    }
+    return new_path;
+}
+
+bool is_directory(type_args args, const char *path)
+{   
+    struct stat file_stat;
+
+    if(lstat(path, &file_stat) != 0)
+    {
+        print_file_error(args.input[0], path);
+        return false; 
+    }
+
+    return S_ISDIR(file_stat.st_mode);
+}
+
+void delete_aux(type_args args,void function(type_args args, int n, unsigned char flags ,char *full_path)){
+    if(args.length == 1){
+        print_error(args.input[0], "Missing operand");
+        return;
+    } else if (args.length > 1)
+    {
+        for(int i =1; i < args.length; i++){
+            function(args, i, 0, NULL);
+        }
+    }
+    
+}
+
+void cmd_create(type_args args, t_lists *lists)
+{
+    UNUSED(args);
+    UNUSED(lists);
+}
+
+void cmd_setdirparams(type_args args, t_lists *lists)
+{
+    UNUSED(args);
+    UNUSED(lists);
+}
+
+void cmd_getdirparams(type_args args, t_lists *lists)
+{
+    UNUSED(args);
+    UNUSED(lists);
+}
+
+void cmd_dir(type_args args, t_lists *lists)
+{   
+    UNUSED(args);
+    UNUSED(lists);
+}
+
+void erase_aux(type_args args, int n, unsigned char flags,char *full_path){
+    UNUSED(flags);
+    char *path = build_path(args.input[n], full_path);
+
+    if(remove(path) == 0){
+        printf("File %s erased successfully\n", path);
+    } else {
+        print_file_error(args.input[0], path);
+    }
+
+    free(path);
+}
+
+void cmd_erase(type_args args, t_lists *lists){
+    UNUSED(lists);
+    delete_aux(args, erase_aux);
+}
+
+void delrec_aux(type_args args, int n, unsigned char flags ,char *full_path){
+    UNUSED(flags);
+    char *path = build_path(args.input[n], full_path);
+
+    if(remove(path) == 0){
+        printf("File/Directory %s erased successfully\n", path);
+    } else {
+        openDir(args, path, 0, delrec_aux); // Remove recursively
+        if (remove(path) == -1) // Finally remove dir
+        {
+            pPrintErrorFile(args.input[0], path);
+        }
+    }
+    free(path);
+}
+
+void cmd_delrec(type_args args, t_lists *lists){
+    UNUSED(lists);
+    delete_aux(args, delrec_aux);
+}

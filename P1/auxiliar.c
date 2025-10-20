@@ -235,3 +235,9 @@ int get_input(char *input)
 
     return length;
 }
+
+void print_file_error(char *name, char *file)
+{
+    fprintf(stderr, "\033[1;31mError: %s: %s: %s\033[0m\n",
+        name, file, strerror(errno));
+}
