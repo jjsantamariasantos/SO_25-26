@@ -18,10 +18,10 @@ date: October 2025
     {              \
         (void)(f); \
     } while (0) //* to avoid warnings of unused variables   
-#define FLAG_LONG  (1 << 0)  // 0001 (1)
-#define FLAG_ACC   (1 << 1)  // 0010 (2)
-#define FLAG_LINK  (1 << 2)  // 0100 (4)
-#define FLAG_HID   (1 << 3)  // 1000 (8)
+#define FLAG_LONG  (1 << 0)  
+#define FLAG_ACC   (1 << 1)  
+#define FLAG_LINK  (1 << 2)  
+#define FLAG_HID   (1 << 3)  
 #define FLAG_AVOID (1 << 4)  
 //* end of macros for general use
 

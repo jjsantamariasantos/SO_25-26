@@ -73,9 +73,13 @@ void delrec_aux(type_args args, int n, unsigned char flags ,char* full_path);
 //*end of delrec auxiliary functions    
 
 //*lseek auxiliary functions
+int get_ref(char *ref_str);
+char *ref_to_str(int ref);
+void lseek_aux(type_args args, t_list_file *list, int fd, off_t offset, int ref);
 //*end of lseek auxiliary functions
 
 //*writestr auxiliary functions
+void writestr_aux(type_args args, t_list_file *list, int fd, char *str);
 //*end of writestr auxiliary functions
 
 //*end of auxiliary functions for commands
@@ -887,4 +891,146 @@ void delrec_aux(type_args args, int n, unsigned char flags ,char *full_path){
 void cmd_delrec(type_args args, t_lists *lists){
     UNUSED(lists);
     delete_aux(args, delrec_aux);
+}
+
+int get_ref(char *ref_str)
+{
+    if (strcmp(ref_str, "SEEK_SET") == 0)
+        return SEEK_SET;
+    else if (strcmp(ref_str, "SEEK_CUR") == 0)
+        return SEEK_CUR;
+    else if (strcmp(ref_str, "SEEK_END") == 0)
+        return SEEK_END;
+    else
+        return -1;
+}
+
+char *ref_to_str(int ref)
+{
+    switch (ref)
+    {
+    case SEEK_SET:
+        return "SEEK_SET";
+    case SEEK_CUR:
+        return "SEEK_CUR";
+    case SEEK_END:
+        return "SEEK_END";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+void lseek_aux(type_args args, t_list_file *list, int fd, off_t offset, int ref)
+{
+      t_pos_file pos = find_item_file(fd, *list);
+
+    if (pos == FNULL)
+    {
+        print_error(args.input[0], "Bad file descriptor");
+        return;
+    }
+
+    t_item_file item = get_item_file(pos, *list);
+
+    if (strcmp(item.file_name, "unused") == 0)
+    {
+        print_error(args.input[0], "File descriptor is not in use");
+        return;
+    }
+
+    off_t new_offset = lseek(fd, offset, ref);
+
+    if (new_offset == -1)
+    {
+        print_system_error(args.input[0]);
+        return;
+    }
+
+    printf("File %s (fd %d): offset positioned at %ld using %s\n",
+            item.file_name, fd, (long)new_offset, ref_to_str(ref));
+}
+
+void cmd_lseek(type_args args, t_lists *lists)
+{
+    int fd, ref;
+    off_t offset;
+
+    if (!string_to_int(args.input[1], &fd))
+    {
+        print_error(args.input[0], "Invalid file descriptor");
+        return;
+    }
+
+    if (fd < 0)
+    {
+        print_error(args.input[0], "fd must be a non-negative integer");
+        return;
+    }
+
+    long temp_offset;
+    if (!string_to_int(args.input[2], (int *)&temp_offset))
+    {
+        print_error(args.input[0], "Invalid offset");
+        return;
+    }
+    offset = (off_t)temp_offset;
+
+    ref = get_ref(args.input[3]);
+    if (ref == -1)
+    {
+        print_error(args.input[0], "Invalid reference (use SEEK_SET, SEEK_CUR, or SEEK_END)");
+        return;
+    }
+
+    lseek_aux(args, &lists->files, fd, offset, ref);
+}
+
+void writestr_aux(type_args args, t_list_file *list, int fd, char *str)
+{
+    t_pos_file pos = find_item_file(fd, *list);
+
+    if (pos == FNULL)
+    {
+        print_error(args.input[0], "Bad file descriptor");
+        return;
+    }
+
+    t_item_file item = get_item_file(pos, *list);
+
+    if (strcmp(item.file_name, "unused") == 0)
+    {
+        print_error(args.input[0], "File descriptor is not in use");
+        return;
+    }
+
+    ssize_t bytes_written = write(fd, str, strlen(str));
+
+    if (bytes_written == -1)
+    {
+        print_system_error(args.input[0]);
+        return;
+    }
+
+    printf("Wrote %zd bytes to file %s (fd %d)\n", bytes_written, item.file_name, fd);
+}
+
+void cmd_writestr(type_args args, t_lists *lists)
+{
+    int fd;
+
+    if (!string_to_int(args.input[1], &fd))
+    {
+        print_error(args.input[0], "Invalid file descriptor");
+        return;
+    }
+
+    if (fd < 0)
+    {
+        print_error(args.input[0], "fd must be a non-negative integer");
+        return;
+    }
+
+    char *str = args.input[2];
+
+    writestr_aux(args, &lists->files, fd, str);
 }
