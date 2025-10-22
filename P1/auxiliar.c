@@ -20,7 +20,7 @@ t_command commands[] =
         {"listopen", cmd_list_open, SHORT_HELP_LISTOPEN, LONG_HELP_LISTOPEN},
         {"infosys", cmd_infosys, SHORT_HELP_INFOSYS, LONG_HELP_INFOSYS},
         {"help", cmd_help, SHORT_HELP_HELP, LONG_HELP_HELP},
-        {"create", cmd_erase, SHORT_HELP_CREATE, LONG_HELP_CREATE},
+        {"create", cmd_create, SHORT_HELP_CREATE, LONG_HELP_CREATE},
         {"setdirparams", cmd_setdirparams, SHORT_HELP_SETDIRPARAMS, LONG_HELP_SETDIRPARAMS},
         {"getdirparams", cmd_getdirparams, SHORT_HELP_GETDIRPARAMS, LONG_HELP_GETDIRPARAMS},
         {"dir", cmd_dir, SHORT_HELP_DIR, LONG_HELP_DIR},
