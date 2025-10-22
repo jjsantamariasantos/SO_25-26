@@ -838,29 +838,241 @@ void delete_aux(type_args args, void function(type_args args, int n, unsigned ch
     }
 }
 
-void cmd_create(type_args args, t_lists *lists)
+void cmd_create(type_args args, t_lists *L)
 {
-    UNUSED(args);
-    UNUSED(lists);
+    UNUSED(L);
+
+    if (args.length < 2)
+    {
+        printf("Uso: create [-f] nombre\n");
+        return;
+    }
+
+    if (strcmp(args.input[1], "-f") == 0)
+    {
+        if (args.length < 3)
+        {
+            printf("Uso: create -f nombre_archivo\n");
+            return;
+        }
+
+        int fd = open(args.input[2], O_CREAT | O_WRONLY | O_TRUNC, 0666);
+        if (fd == -1)
+            print_file_error(args.input[0], args.input[2]);
+        else
+            close(fd);
+    }
+    else
+    {
+        if (mkdir(args.input[1], 0777) == -1)
+            print_file_error(args.input[0], args.input[1]);
+    }
 }
 
-void cmd_setdirparams(type_args args, t_lists *lists)
+
+void cmd_setdirparams(type_args args, t_lists *L)
 {
-    UNUSED(args);
-    UNUSED(lists);
+    if (args.length < 2)
+    {
+        printf("Uso: setdirparams [long|short] [link|nolink] [hid|nohid] [reca|recb|norec]\n");
+        return;
+    }
+
+    for (int i = 1; i < args.length; i++)
+    {
+        char *param = args.input[i];
+
+        for (char *p = param; *p; ++p) *p = tolower(*p);
+
+        if (strcmp(param, "long") == 0)
+            L->dir_flags |= FLAG_LONG;
+        else if (strcmp(param, "short") == 0)
+            L->dir_flags &= ~FLAG_LONG;
+
+        else if (strcmp(param, "link") == 0)
+            L->dir_flags |= FLAG_LINK;
+        else if (strcmp(param, "nolink") == 0)
+            L->dir_flags &= ~FLAG_LINK;
+
+        else if (strcmp(param, "hid") == 0)
+            L->dir_flags |= FLAG_HID;
+        else if (strcmp(param, "nohid") == 0)
+            L->dir_flags &= ~FLAG_HID;
+
+        else if (strcmp(param, "reca") == 0)
+        {
+            L->dir_flags &= ~FLAG_AVOID;
+            L->dir_flags |= FLAG_ACC;
+        }
+        else if (strcmp(param, "recb") == 0)
+        {
+            L->dir_flags &= ~FLAG_ACC;
+            L->dir_flags |= FLAG_AVOID;
+        }
+        else if (strcmp(param, "norec") == 0)
+            L->dir_flags &= ~(FLAG_ACC | FLAG_AVOID);
+
+        else
+            print_file_error(args.input[0], param);
+    }
 }
 
-void cmd_getdirparams(type_args args, t_lists *lists)
+
+void cmd_getdirparams(type_args args, t_lists *L)
 {
     UNUSED(args);
-    UNUSED(lists);
+
+    printf("long: %s\n",  (L->dir_flags & FLAG_LONG)  ? "on" : "off");
+    printf("link: %s\n",  (L->dir_flags & FLAG_LINK)  ? "on" : "off");
+    printf("hid:  %s\n",  (L->dir_flags & FLAG_HID)   ? "on" : "off");
+
+    if (L->dir_flags & FLAG_ACC)
+        printf("recursion: reca\n");
+    else if (L->dir_flags & FLAG_AVOID)
+        printf("recursion: recb\n");
+    else
+        printf("recursion: norec\n");
 }
 
-void cmd_dir(type_args args, t_lists *lists)
+
+
+static void print_file_info(type_args args, const char *path, const char *name, int flags)
 {
-    UNUSED(args);
-    UNUSED(lists);
+    char full_path[PATH_MAX];
+    snprintf(full_path, sizeof(full_path), "%s/%s", path, name);
+
+    struct stat st;
+    if (lstat(full_path, &st) == -1)
+    {
+        print_file_error(args.input[0], (char *)full_path);
+        return;
+    }
+
+    if (!(flags & FLAG_LONG))
+    {
+        printf("%-25s %10ld\n", name, (long)st.st_size);
+        return;
+    }
+
+    // long format
+    char perms[11] = "----------";
+    if (S_ISDIR(st.st_mode)) perms[0] = 'd';
+    else if (S_ISLNK(st.st_mode)) perms[0] = 'l';
+    if (st.st_mode & S_IRUSR) perms[1] = 'r';
+    if (st.st_mode & S_IWUSR) perms[2] = 'w';
+    if (st.st_mode & S_IXUSR) perms[3] = 'x';
+    if (st.st_mode & S_IRGRP) perms[4] = 'r';
+    if (st.st_mode & S_IWGRP) perms[5] = 'w';
+    if (st.st_mode & S_IXGRP) perms[6] = 'x';
+    if (st.st_mode & S_IROTH) perms[7] = 'r';
+    if (st.st_mode & S_IWOTH) perms[8] = 'w';
+    if (st.st_mode & S_IXOTH) perms[9] = 'x';
+
+    struct tm *tm_info = localtime(&st.st_mtime);
+    char timebuf[64];
+    strftime(timebuf, sizeof(timebuf), "%b %d %H:%M", tm_info);
+
+    struct passwd *pw = getpwuid(st.st_uid);
+    struct group *gr = getgrgid(st.st_gid);
+
+    printf("%s %3ld %8s %8s %8ld %s %s",
+           perms, (long)st.st_nlink,
+           pw ? pw->pw_name : "?", gr ? gr->gr_name : "?",
+           (long)st.st_size, timebuf, name);
+
+    if ((flags & FLAG_LINK) && S_ISLNK(st.st_mode))
+    {
+        char linktarget[PATH_MAX];
+        ssize_t len = readlink(full_path, linktarget, sizeof(linktarget) - 1);
+        if (len != -1)
+        {
+            linktarget[len] = '\0';
+            printf(" -> %s", linktarget);
+        }
+    }
+
+    printf("\n");
 }
+
+static void list_directory(type_args args, const char *path, int flags, bool header)
+{
+    DIR *dir = opendir(path);
+    if (!dir)
+    {
+        print_file_error(args.input[0],(char *)path);
+        return;
+    }
+
+    if (header)
+        printf("\n%s:\n", path);
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (!(flags & FLAG_HID) && entry->d_name[0] == '.')
+            continue;
+
+        print_file_info(args, path, entry->d_name, flags);
+    }
+    closedir(dir);
+}
+
+static void dir_recursive(type_args args, const char *path, int flags, bool before)
+{
+    DIR *dir = opendir(path);
+    if (!dir)
+    {
+        print_file_error(args.input[0], (char *)path);
+        return;
+    }
+
+    struct dirent *entry;
+
+    if (before)
+        list_directory(args, path, flags, true);
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue;
+        if (!(flags & FLAG_HID) && entry->d_name[0] == '.')
+            continue;
+
+        char new_path[PATH_MAX];
+        snprintf(new_path, sizeof(new_path), "%s/%s", path, entry->d_name);
+
+        struct stat st;
+        if (lstat(new_path, &st) == -1)
+        {
+            print_file_error(args.input[0], new_path);
+            continue;
+        }
+
+        if (S_ISDIR(st.st_mode))
+        {
+            dir_recursive(args, new_path, flags, before);
+        }
+    }
+
+    if (!before)
+        list_directory(args, path, flags, true);
+
+    closedir(dir);
+}
+
+void cmd_dir(type_args args, t_lists *L)
+{
+    char *path = (args.length > 1) ? args.input[1] : ".";
+    int flags = L->dir_flags;
+
+    if (flags & FLAG_ACC)
+        dir_recursive(args, path, flags, true);
+    else if (flags & FLAG_AVOID)
+        dir_recursive(args, path, flags, false);
+    else
+        list_directory(args, path, flags, false);
+}
+
 
 void erase_aux(type_args args, int n, unsigned char flags, char *full_path)
 {
