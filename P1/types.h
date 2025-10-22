@@ -17,7 +17,9 @@ date: October 2025
 #include <sys/utsname.h>
 #include <sys/stat.h>
 #include <dirent.h>
-
+#include <pwd.h>     
+#include <grp.h>     
+#include <ctype.h> 
 
 #include "macros.h"
 typedef struct type_args
