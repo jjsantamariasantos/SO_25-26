@@ -842,7 +842,17 @@ void cmd_create(type_args args, t_lists *L)
 {
     UNUSED(L);
 
-    if (args.length < 2)
+    if (args.length == 1)
+    {
+        char cwd[PATH_MAX];
+        if (getcwd(cwd, sizeof(cwd)) != NULL)
+            printf("%s\n", cwd);
+        else
+            perror("getcwd");
+        return;
+    }
+
+    if (args.input[1][0] == '-' && strcmp(args.input[1], "-f") != 0)
     {
         printf("Uso: create [-f] nombre\n");
         return;
@@ -858,17 +868,22 @@ void cmd_create(type_args args, t_lists *L)
 
         int fd = open(args.input[2], O_CREAT | O_WRONLY | O_TRUNC, 0666);
         if (fd == -1)
+        {
             print_file_error(args.input[0], args.input[2]);
-        else
-            close(fd);
+            return;
+        }
+
+        close(fd);
+        return;
     }
-    else
+
+    int res = mkdir(args.input[1], 0777);
+    if (res == -1)
     {
-        if (mkdir(args.input[1], 0777) == -1)
-            print_file_error(args.input[0], args.input[1]);
+        print_file_error(args.input[0], args.input[1]);
+        return;
     }
 }
-
 
 void cmd_setdirparams(type_args args, t_lists *L)
 {
