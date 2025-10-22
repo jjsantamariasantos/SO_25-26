@@ -3,7 +3,6 @@ authors: Jesus José Santamaría Santos(j.j.ssantos@udc.es), José Comerón Lado
 date: October 2025
 */
 
-
 #include "commands.h"
 
 //*auxiliary functions for commands
@@ -11,9 +10,9 @@ date: October 2025
 //*multiple commands auxiliary functions
 int get_mode(type_args mode_str);
 void open_dir(type_args args, char *path, unsigned char flags, void function(type_args args, int n, unsigned char flags, char *full_path));
-char* build_path(char *relative_path, char *full_path);
-bool is_directory(type_args args, const char *path);
-void delete_aux(type_args args,void function(type_args args, int n, unsigned char flags ,char *full_path));
+char *build_path(char *relative_path, char *full_path);
+bool is_directory(type_args args, char *path);
+void delete_aux(type_args args, void function(type_args args, int n, unsigned char flags, char *full_path));
 //*end of multiple commands auxiliary functions
 
 //* authors auxiliary functions
@@ -56,21 +55,21 @@ void long_help_cmd(type_args args);
 //*end of create auxiliary functions
 
 //*setdirparams auxiliary functions
-//*end of setdirparams auxiliary functions  
+//*end of setdirparams auxiliary functions
 
 //*getdirparams auxiliary functions
 //*end of getdirparams auxiliary functions
 
 //*dir auxiliary functions
-//*end of dir auxiliary functions   
+//*end of dir auxiliary functions
 
 //*erase auxiliary functions
-void erase_aux(type_args args, int n, unsigned char flags ,char* full_path);
+void erase_aux(type_args args, int n, unsigned char flags, char *full_path);
 //*end of erase auxiliary functions
 
 //*delrec auxiliary functions
-void delrec_aux(type_args args, int n, unsigned char flags ,char* full_path);
-//*end of delrec auxiliary functions    
+void delrec_aux(type_args args, int n, unsigned char flags, char *full_path);
+//*end of delrec auxiliary functions
 
 //*lseek auxiliary functions
 int get_ref(char *ref_str);
@@ -215,9 +214,10 @@ void cmd_date(type_args args, t_lists *lists)
         {
             printf("Dia:\n    %02d/%02d/%04d\n", local->tm_mday, local->tm_mon + 1, local->tm_year + 1900);
             printf("Hora:\n    %02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
-        } else
+        }
+        else
             print_error(args.input[0], "Invalid argument");
-        
+
         break;
     default:
         print_error(args.input[0], "Invalid num of arguments");
@@ -341,11 +341,11 @@ void cmd_infosys(type_args args, t_lists *lists)
     UNUSED(lists);
     struct utsname buffer;
 
-    if (uname(&buffer) != 0){
+    if (uname(&buffer) != 0)
+    {
         perror("uname failed");
         return;
     }
-        
 
     printf("System Information:\n");
     printf("    Node Name:   %s\n", buffer.nodename);
@@ -541,7 +541,7 @@ void open_aux(type_args args, t_list_file *list)
         }
 
         printf("File %s opened with fd %d and mode %s\n",
-            item.file_name, item.fd, mode_to_string(item.mode));
+               item.file_name, item.fd, mode_to_string(item.mode));
     }
 }
 
@@ -693,11 +693,11 @@ void print_item_file(t_item_file item)
 {
     if (item.mode == SNULL)
         printf("descriptor: %d -> \033[1;35m%s\033[0m\n",
-            item.fd, item.file_name);
+               item.fd, item.file_name);
     else if (strcmp(item.file_name, "unused") != 0)
     {
         printf("descriptor: %d -> \033[1;35m%s\033[0m\033[1;32m%s\033[0m\n",
-            item.fd, item.file_name, mode_to_string(item.mode));
+               item.fd, item.file_name, mode_to_string(item.mode));
     }
     else
         printf("descriptor: %d -> \033[1;35m%10s\033[0m\n", item.fd, item.file_name);
@@ -769,11 +769,11 @@ void long_help_cmd(type_args args)
     print_error(args.input[1], "Command not found");
 }
 
-
 void open_dir(type_args args, char *path, unsigned char flags, void function(type_args args, int n, unsigned char flags, char *full_path))
 {
     DIR *dir = opendir(path);
-    if(dir == NULL){
+    if (dir == NULL)
+    {
         print_file_error(args.input[0], path);
         return;
     }
@@ -782,8 +782,10 @@ void open_dir(type_args args, char *path, unsigned char flags, void function(typ
     new_args.length = 2;
 
     struct dirent *entry;
-    while((entry = readdir(dir)) != NULL){
-        if(!(flags & FLAG_AVOID) || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)){
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (!(flags & FLAG_AVOID) || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0))
+        {
             new_args.input[1] = entry->d_name;
             function(new_args, 1, flags, path);
         }
@@ -791,12 +793,15 @@ void open_dir(type_args args, char *path, unsigned char flags, void function(typ
     closedir(dir);
 }
 
-char* build_path(char *relative_path, char *full_path)
+char *build_path(char *relative_path, char *full_path)
 {
     char *new_path;
-    if(full_path == NULL){
+    if (full_path == NULL)
+    {
         new_path = strdup(relative_path);
-    } else {
+    }
+    else
+    {
         size_t length = strlen(full_path) + strlen(relative_path) + 2;
         new_path = malloc(length * sizeof(char));
         snprintf(new_path, length, "%s/%s", full_path, relative_path);
@@ -804,30 +809,33 @@ char* build_path(char *relative_path, char *full_path)
     return new_path;
 }
 
-bool is_directory(type_args args, const char *path)
-{   
+bool is_directory(type_args args, char *path)
+{
     struct stat file_stat;
 
-    if(lstat(path, &file_stat) != 0)
+    if (lstat(path, &file_stat) != 0)
     {
         print_file_error(args.input[0], path);
-        return false; 
+        return false;
     }
 
     return S_ISDIR(file_stat.st_mode);
 }
 
-void delete_aux(type_args args,void function(type_args args, int n, unsigned char flags ,char *full_path)){
-    if(args.length == 1){
+void delete_aux(type_args args, void function(type_args args, int n, unsigned char flags, char *full_path))
+{
+    if (args.length == 1)
+    {
         print_error(args.input[0], "Missing operand");
         return;
-    } else if (args.length > 1)
+    }
+    else if (args.length > 1)
     {
-        for(int i =1; i < args.length; i++){
+        for (int i = 1; i < args.length; i++)
+        {
             function(args, i, 0, NULL);
         }
     }
-    
 }
 
 void cmd_create(type_args args, t_lists *lists)
@@ -849,46 +857,56 @@ void cmd_getdirparams(type_args args, t_lists *lists)
 }
 
 void cmd_dir(type_args args, t_lists *lists)
-{   
+{
     UNUSED(args);
     UNUSED(lists);
 }
 
-void erase_aux(type_args args, int n, unsigned char flags,char *full_path){
+void erase_aux(type_args args, int n, unsigned char flags, char *full_path)
+{
     UNUSED(flags);
     char *path = build_path(args.input[n], full_path);
 
-    if(remove(path) == 0){
+    if (remove(path) == 0)
+    {
         printf("File %s erased successfully\n", path);
-    } else {
+    }
+    else
+    {
         print_file_error(args.input[0], path);
     }
 
     free(path);
 }
 
-void cmd_erase(type_args args, t_lists *lists){
+void cmd_erase(type_args args, t_lists *lists)
+{
     UNUSED(lists);
     delete_aux(args, erase_aux);
 }
 
-void delrec_aux(type_args args, int n, unsigned char flags ,char *full_path){
+void delrec_aux(type_args args, int n, unsigned char flags, char *full_path)
+{
     UNUSED(flags);
     char *path = build_path(args.input[n], full_path);
 
-    if(remove(path) == 0){
+    if (remove(path) == 0)
+    {
         printf("File/Directory %s erased successfully\n", path);
-    } else {
-        openDir(args, path, 0, delrec_aux); // Remove recursively
-        if (remove(path) == -1) // Finally remove dir
+    }
+    else
+    {
+        open_dir(args, path, 0, delrec_aux); 
+        if (remove(path) == -1)           
         {
-            pPrintErrorFile(args.input[0], path);
+            print_file_error(args.input[0], path);
         }
     }
     free(path);
 }
 
-void cmd_delrec(type_args args, t_lists *lists){
+void cmd_delrec(type_args args, t_lists *lists)
+{
     UNUSED(lists);
     delete_aux(args, delrec_aux);
 }
@@ -922,7 +940,7 @@ char *ref_to_str(int ref)
 
 void lseek_aux(type_args args, t_list_file *list, int fd, off_t offset, int ref)
 {
-      t_pos_file pos = find_item_file(fd, *list);
+    t_pos_file pos = find_item_file(fd, *list);
 
     if (pos == FNULL)
     {
@@ -947,7 +965,7 @@ void lseek_aux(type_args args, t_list_file *list, int fd, off_t offset, int ref)
     }
 
     printf("File %s (fd %d): offset positioned at %ld using %s\n",
-            item.file_name, fd, (long)new_offset, ref_to_str(ref));
+           item.file_name, fd, (long)new_offset, ref_to_str(ref));
 }
 
 void cmd_lseek(type_args args, t_lists *lists)

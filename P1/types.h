@@ -18,6 +18,7 @@ date: October 2025
 #include <sys/stat.h>
 #include <dirent.h>
 
+
 #include "macros.h"
 typedef struct type_args
 {
@@ -36,6 +37,7 @@ typedef struct t_lists
 {
     t_list_historic historic;
     t_list_file files;
+    unsigned char dir_flags;
 } t_lists;
 //* end of forward declaration
 

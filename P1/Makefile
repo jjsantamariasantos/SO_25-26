@@ -2,8 +2,8 @@
 #date: October 2025
 
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -g
-LDFLAGS =
+CFLAGS = -Wall -Wextra -std=gnu99 -g
+LDFLAGS = 
 
 TARGET = a.out
 
