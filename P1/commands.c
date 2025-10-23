@@ -945,9 +945,9 @@ void cmd_getdirparams(type_args args, t_lists *L)
     printf("hid:  %s\n",  (L->dir_flags & FLAG_HID)   ? "on" : "off");
 
     if (L->dir_flags & FLAG_ACC)
-        printf("recursion: reca\n");
+        printf("recursion(despues)\n");
     else if (L->dir_flags & FLAG_AVOID)
-        printf("recursion: recb\n");
+        printf("recursion(antes)\n");
     else
         printf("recursion: norec\n");
 }
@@ -972,7 +972,6 @@ static void print_file_info(type_args args, const char *path, const char *name, 
         return;
     }
 
-    // long format
     char perms[11] = "----------";
     if (S_ISDIR(st.st_mode)) perms[0] = 'd';
     else if (S_ISLNK(st.st_mode)) perms[0] = 'l';
@@ -1080,15 +1079,67 @@ static void dir_recursive(type_args args, const char *path, int flags, bool befo
 
 void cmd_dir(type_args args, t_lists *L)
 {
-    char *path = (args.length > 1) ? args.input[1] : ".";
     int flags = L->dir_flags;
+    bool dash_d = false;
+    int start_index = 1;
 
-    if (flags & FLAG_ACC)
-        dir_recursive(args, path, flags, true);
-    else if (flags & FLAG_AVOID)
-        dir_recursive(args, path, flags, false);
-    else
-        list_directory(args, path, flags, false);
+    if (args.length > 1 && strcmp(args.input[1], "-d") == 0)
+    {
+        dash_d = true;
+        start_index = 2;
+    }
+
+    if (args.length == 1 || (dash_d && args.length == 2))
+    {
+        char *path = ".";
+        if (dash_d)
+        {
+            if (flags & FLAG_ACC)
+                dir_recursive(args, path, flags, true);
+            else if (flags & FLAG_AVOID)
+                dir_recursive(args, path, flags, false);
+            else
+                list_directory(args, path, flags, false);
+        }
+        else
+        {
+            list_directory(args, path, flags, false);
+        }
+        return;
+    }
+
+    for (int i = start_index; i < args.length; i++)
+    {
+        char *path = args.input[i];
+        struct stat st;
+
+        if (lstat(path, &st) == -1)
+        {
+            print_file_error(args.input[0], path);
+            continue;
+        }
+
+        if (S_ISDIR(st.st_mode))
+        {
+            if (dash_d)
+            {
+                if (flags & FLAG_ACC)
+                    dir_recursive(args, path, flags, true);
+                else if (flags & FLAG_AVOID)
+                    dir_recursive(args, path, flags, false);
+                else
+                    list_directory(args, path, flags, true);
+            }
+            else
+            {
+                print_file_info(args, ".", path, flags);
+            }
+        }
+        else
+        {
+            print_file_info(args, ".", path, flags);
+        }
+    }
 }
 
 
