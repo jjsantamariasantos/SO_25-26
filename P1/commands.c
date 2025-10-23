@@ -786,8 +786,11 @@ void open_dir(type_args args, char *path, unsigned char flags, void function(typ
     {
         if (!(flags & FLAG_AVOID) || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0))
         {
-            new_args.input[1] = entry->d_name;
-            function(new_args, 1, flags, path);
+            if ((flags & FLAG_HID) || entry->d_name[0] != '.')
+            {
+                new_args.input[1] = entry->d_name;
+                function(new_args, 1, flags, path);
+            }
         }
     }
     closedir(dir);
@@ -844,7 +847,7 @@ void cmd_create(type_args args, t_lists *L)
 
     if (args.length == 1)
     {
-        char cwd[PATH_MAX];
+        char cwd[MAX_INPUT_SIZE];
         if (getcwd(cwd, sizeof(cwd)) != NULL)
             printf("%s\n", cwd);
         else
@@ -953,7 +956,7 @@ void cmd_getdirparams(type_args args, t_lists *L)
 
 static void print_file_info(type_args args, const char *path, const char *name, int flags)
 {
-    char full_path[PATH_MAX];
+    char full_path[MAX_INPUT_SIZE];
     snprintf(full_path, sizeof(full_path), "%s/%s", path, name);
 
     struct stat st;
@@ -997,7 +1000,7 @@ static void print_file_info(type_args args, const char *path, const char *name, 
 
     if ((flags & FLAG_LINK) && S_ISLNK(st.st_mode))
     {
-        char linktarget[PATH_MAX];
+        char linktarget[MAX_INPUT_SIZE];
         ssize_t len = readlink(full_path, linktarget, sizeof(linktarget) - 1);
         if (len != -1)
         {
@@ -1053,7 +1056,7 @@ static void dir_recursive(type_args args, const char *path, int flags, bool befo
         if (!(flags & FLAG_HID) && entry->d_name[0] == '.')
             continue;
 
-        char new_path[PATH_MAX];
+        char new_path[MAX_INPUT_SIZE];
         snprintf(new_path, sizeof(new_path), "%s/%s", path, entry->d_name);
 
         struct stat st;
@@ -1117,16 +1120,12 @@ void delrec_aux(type_args args, int n, unsigned char flags, char *full_path)
     UNUSED(flags);
     char *path = build_path(args.input[n], full_path);
 
-    if (remove(path) == 0)
-    {
-        printf("File/Directory %s erased successfully\n", path);
-    }
-    else
-    {
-        open_dir(args, path, 0, delrec_aux); 
-        if (remove(path) == -1)           
-        {
+    if(remove(path) == -1){
+        open_dir(args, path, 0, delrec_aux);
+        if(remove(path) == -1){
             print_file_error(args.input[0], path);
+        } else {
+            printf("Directory %s deleted successfully\n", path);
         }
     }
     free(path);
