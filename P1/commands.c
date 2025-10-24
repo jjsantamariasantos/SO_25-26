@@ -175,7 +175,9 @@ void cmd_chdir(type_args args, t_lists *lists)
         }
         else
         {
-            printf("Exitoso cambio a \033[1;34m%s\033[0m\n", args.input[1]);
+            char cwd[1024];
+            getcwd(cwd, sizeof(cwd));
+            printf("Exitoso cambio a \033[1;34m%s\033[0m\n", cwd);
         }
         break;
 
@@ -900,7 +902,8 @@ void cmd_setdirparams(type_args args, t_lists *L)
     {
         char *param = args.input[i];
 
-        for (char *p = param; *p; ++p) *p = tolower(*p);
+        for (char *p = param; *p; ++p)
+            *p = tolower(*p);
 
         if (strcmp(param, "long") == 0)
             L->dir_flags |= FLAG_LONG;
@@ -935,14 +938,13 @@ void cmd_setdirparams(type_args args, t_lists *L)
     }
 }
 
-
 void cmd_getdirparams(type_args args, t_lists *L)
 {
     UNUSED(args);
 
-    printf("long: %s\n",  (L->dir_flags & FLAG_LONG)  ? "on" : "off");
-    printf("link: %s\n",  (L->dir_flags & FLAG_LINK)  ? "on" : "off");
-    printf("hid:  %s\n",  (L->dir_flags & FLAG_HID)   ? "on" : "off");
+    printf("long: %s\n", (L->dir_flags & FLAG_LONG) ? "on" : "off");
+    printf("link: %s\n", (L->dir_flags & FLAG_LINK) ? "on" : "off");
+    printf("hid:  %s\n", (L->dir_flags & FLAG_HID) ? "on" : "off");
 
     if (L->dir_flags & FLAG_ACC)
         printf("recursion(despues)\n");
@@ -951,8 +953,6 @@ void cmd_getdirparams(type_args args, t_lists *L)
     else
         printf("recursion: norec\n");
 }
-
-
 
 static void print_file_info(type_args args, const char *path, const char *name, int flags)
 {
@@ -973,17 +973,28 @@ static void print_file_info(type_args args, const char *path, const char *name, 
     }
 
     char perms[11] = "----------";
-    if (S_ISDIR(st.st_mode)) perms[0] = 'd';
-    else if (S_ISLNK(st.st_mode)) perms[0] = 'l';
-    if (st.st_mode & S_IRUSR) perms[1] = 'r';
-    if (st.st_mode & S_IWUSR) perms[2] = 'w';
-    if (st.st_mode & S_IXUSR) perms[3] = 'x';
-    if (st.st_mode & S_IRGRP) perms[4] = 'r';
-    if (st.st_mode & S_IWGRP) perms[5] = 'w';
-    if (st.st_mode & S_IXGRP) perms[6] = 'x';
-    if (st.st_mode & S_IROTH) perms[7] = 'r';
-    if (st.st_mode & S_IWOTH) perms[8] = 'w';
-    if (st.st_mode & S_IXOTH) perms[9] = 'x';
+    if (S_ISDIR(st.st_mode))
+        perms[0] = 'd';
+    else if (S_ISLNK(st.st_mode))
+        perms[0] = 'l';
+    if (st.st_mode & S_IRUSR)
+        perms[1] = 'r';
+    if (st.st_mode & S_IWUSR)
+        perms[2] = 'w';
+    if (st.st_mode & S_IXUSR)
+        perms[3] = 'x';
+    if (st.st_mode & S_IRGRP)
+        perms[4] = 'r';
+    if (st.st_mode & S_IWGRP)
+        perms[5] = 'w';
+    if (st.st_mode & S_IXGRP)
+        perms[6] = 'x';
+    if (st.st_mode & S_IROTH)
+        perms[7] = 'r';
+    if (st.st_mode & S_IWOTH)
+        perms[8] = 'w';
+    if (st.st_mode & S_IXOTH)
+        perms[9] = 'x';
 
     struct tm *tm_info = localtime(&st.st_mtime);
     char timebuf[64];
@@ -1016,7 +1027,7 @@ static void list_directory(type_args args, const char *path, int flags, bool hea
     DIR *dir = opendir(path);
     if (!dir)
     {
-        print_file_error(args.input[0],(char *)path);
+        print_file_error(args.input[0], (char *)path);
         return;
     }
 
@@ -1142,7 +1153,6 @@ void cmd_dir(type_args args, t_lists *L)
     }
 }
 
-
 void erase_aux(type_args args, int n, unsigned char flags, char *full_path)
 {
     UNUSED(flags);
@@ -1171,11 +1181,15 @@ void delrec_aux(type_args args, int n, unsigned char flags, char *full_path)
     UNUSED(flags);
     char *path = build_path(args.input[n], full_path);
 
-    if(remove(path) == -1){
+    if (remove(path) == -1)
+    {
         open_dir(args, path, 0, delrec_aux);
-        if(remove(path) == -1){
+        if (remove(path) == -1)
+        {
             print_file_error(args.input[0], path);
-        } else {
+        }
+        else
+        {
             printf("Directory %s deleted successfully\n", path);
         }
     }

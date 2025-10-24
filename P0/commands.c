@@ -135,7 +135,9 @@ void cmd_chdir(type_args args, t_lists *lists)
         }
         else
         {
-            printf("Exitoso cambio a \033[1;34m%s\033[0m\n", args.input[1]);
+            char cwd[1024];
+            getcwd(cwd, sizeof(cwd));
+            printf("Exitoso cambio a \033[1;34m%s\033[0m\n", cwd);
         }
         break;
 
@@ -174,9 +176,10 @@ void cmd_date(type_args args, t_lists *lists)
         {
             printf("Dia:\n    %02d/%02d/%04d\n", local->tm_mday, local->tm_mon + 1, local->tm_year + 1900);
             printf("Hora:\n    %02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
-        } else
+        }
+        else
             print_error(args.input[0], "Invalid argument");
-        
+
         break;
     default:
         print_error(args.input[0], "Invalid num of arguments");
@@ -300,11 +303,11 @@ void cmd_infosys(type_args args, t_lists *lists)
     UNUSED(lists);
     struct utsname buffer;
 
-    if (uname(&buffer) != 0){
+    if (uname(&buffer) != 0)
+    {
         perror("uname failed");
         return;
     }
-        
 
     printf("System Information:\n");
     printf("    Node Name:   %s\n", buffer.nodename);
