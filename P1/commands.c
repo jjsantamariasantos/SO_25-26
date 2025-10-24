@@ -9,7 +9,8 @@ date: October 2025
 
 //*multiple commands auxiliary functions
 int get_mode(type_args mode_str);
-void open_dir(type_args args, char *path, unsigned char flags, void function(type_args args, int n, unsigned char flags, char *full_path));
+void open_dir(type_args args, char *path, unsigned char flags, 
+    void function(type_args args, int n, unsigned char flags, char *full_path));
 char *build_path(char *relative_path, char *full_path);
 bool is_directory(type_args args, char *path);
 void delete_aux(type_args args, void function(type_args args, int n, unsigned char flags, char *full_path));
@@ -472,7 +473,8 @@ void print_historic_command_n(type_args args, t_lists *list, int n)
         type_args new_args;
         new_args.length = cut_input(item.command, new_args.input);
 
-        if (strcmp(new_args.input[0], "historic") == 0 && new_args.length == 2 && args.input[1][0] != '-')
+        if (strcmp(new_args.input[0], "historic") == 0 && new_args.length == 2 &&
+        args.input[1][0] != '-')
         {
             print_error(args.input[0], "Avoid infinite looping");
             return;
@@ -771,7 +773,8 @@ void long_help_cmd(type_args args)
     print_error(args.input[1], "Command not found");
 }
 
-void open_dir(type_args args, char *path, unsigned char flags, void function(type_args args, int n, unsigned char flags, char *full_path))
+void open_dir(type_args args, char *path, unsigned char flags, 
+    void function(type_args args, int n, unsigned char flags, char *full_path))
 {
     DIR *dir = opendir(path);
     if (dir == NULL)
@@ -786,7 +789,8 @@ void open_dir(type_args args, char *path, unsigned char flags, void function(typ
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL)
     {
-        if (!(flags & FLAG_AVOID) || (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0))
+        if (!(flags & FLAG_AVOID) || (strcmp(entry->d_name, ".") != 0 && 
+        strcmp(entry->d_name, "..") != 0))
         {
             if ((flags & FLAG_HID) || entry->d_name[0] != '.')
             {
@@ -827,7 +831,8 @@ bool is_directory(type_args args, char *path)
     return S_ISDIR(file_stat.st_mode);
 }
 
-void delete_aux(type_args args, void function(type_args args, int n, unsigned char flags, char *full_path))
+void delete_aux(type_args args, 
+    void function(type_args args, int n, unsigned char flags, char *full_path))
 {
     if (args.length == 1)
     {
