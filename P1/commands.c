@@ -10,7 +10,7 @@ date: October 2025
 //*multiple commands auxiliary functions
 int get_mode(type_args mode_str);
 void open_dir(type_args args, char *path, unsigned char flags, 
-    void function(type_args args, int n, unsigned char flags, char *full_path));
+void function(type_args args, int n, unsigned char flags, char *full_path));
 char *build_path(char *relative_path, char *full_path);
 bool is_directory(type_args args, char *path);
 void delete_aux(type_args args, void function(type_args args, int n, unsigned char flags, char *full_path));
@@ -43,6 +43,7 @@ void dup_aux(type_args args, t_list_file *list, int fd);
 //*end of dup auxiliary functions
 
 //*list_open auxiliary functions
+void print_file_info(type_args args, const char *path, const char *name, int flags);
 void open_file_list(t_list_file *list);
 void print_item_file(t_item_file item);
 //*end of list_open auxiliary functions
@@ -62,6 +63,9 @@ void long_help_cmd(type_args args);
 //*end of getdirparams auxiliary functions
 
 //*dir auxiliary functions
+
+void list_directory(type_args args, const char *path, int flags, bool header);
+void dir_recursive(type_args args, const char *path, int flags, bool before);
 //*end of dir auxiliary functions
 
 //*erase auxiliary functions
@@ -651,7 +655,7 @@ void dup_aux(type_args args, t_list_file *list, int fd)
         t_item_file item, new_item;
         item = get_item_file(pos, *list);
 
-        printf("%s [dup] %d (%s)", new_name, fd, item.file_name);
+        printf("%s [dup] %d (%s)\n", new_name, fd, item.file_name);
 
         new_item.fd = new_fd;
         strcpy(new_item.file_name, new_name);
@@ -959,7 +963,7 @@ void cmd_getdirparams(type_args args, t_lists *L)
         printf("recursion: norec\n");
 }
 
-static void print_file_info(type_args args, const char *path, const char *name, int flags)
+void print_file_info(type_args args, const char *path, const char *name, int flags)
 {
     char full_path[MAX_INPUT_SIZE];
     snprintf(full_path, sizeof(full_path), "%s/%s", path, name);
@@ -1027,7 +1031,7 @@ static void print_file_info(type_args args, const char *path, const char *name, 
     printf("\n");
 }
 
-static void list_directory(type_args args, const char *path, int flags, bool header)
+void list_directory(type_args args, const char *path, int flags, bool header)
 {
     DIR *dir = opendir(path);
     if (!dir)
@@ -1050,7 +1054,7 @@ static void list_directory(type_args args, const char *path, int flags, bool hea
     closedir(dir);
 }
 
-static void dir_recursive(type_args args, const char *path, int flags, bool before)
+void dir_recursive(type_args args, const char *path, int flags, bool before)
 {
     DIR *dir = opendir(path);
     if (!dir)
