@@ -63,7 +63,7 @@ void long_help_cmd(type_args args);
 //*end of getdirparams auxiliary functions
 
 //*dir auxiliary functions
-
+void print_file_info(type_args args, const char *path, const char *name, int flags);
 void list_directory(type_args args, const char *path, int flags, bool header);
 void dir_recursive(type_args args, const char *path, int flags, bool before);
 //*end of dir auxiliary functions
