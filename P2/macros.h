@@ -25,6 +25,16 @@ date: October 2025
 #define FLAG_AVOID (1 << 4)  
 //* end of macros for general use
 
+//*macros for lists used in the shell
+#define HNULL NULL
+#define FNULL NULL
+#define MNULL NULL
+#define M_MALLOC (1 << 0)
+#define M_MMAP   (1 << 1)
+#define M_SHARED (1 << 2)
+#define M_ALL    (M_MALLOC | M_MMAP | M_SHARED)
+//*end of macros for lists used in the shell
+
 //* macros for authors command
 #define AUTHOR_NAME_1 "Jesús José Santamaría Santos"
 #define AUTHOR_LOGIN_1 "j.j.ssantos@udc.es"

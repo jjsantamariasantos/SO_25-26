@@ -8,8 +8,6 @@ date: October 2025
 
 #include "types.h"
 
-#define HNULL NULL
-
 typedef struct t_item_historic{
     char command[MAX_INPUT_SIZE];
     int num_command;

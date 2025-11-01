@@ -6,20 +6,25 @@ date: October 2025
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <grp.h>
+#include <pwd.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/mman.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/utsname.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/utsname.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <pwd.h>     
-#include <grp.h>     
-#include <ctype.h> 
 
 #include "macros.h"
 typedef struct type_args
@@ -35,10 +40,14 @@ typedef t_pos_historic t_list_historic;
 typedef struct t_node_file *t_pos_file;
 typedef t_pos_file t_list_file;
 
+typedef struct t_node_mem *t_pos_mem;
+typedef t_pos_mem t_list_mem;
+
 typedef struct t_lists
 {
     t_list_historic historic;
     t_list_file files;
+    t_list_mem memory;
     unsigned char dir_flags;
 } t_lists;
 //* end of forward declaration

@@ -8,8 +8,6 @@ date: October 2025
 
 #include "types.h"
 
-#define FNULL NULL
-
 typedef struct t_item_file{
     int fd;
     char file_name[MAX_INPUT_SIZE];

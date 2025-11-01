@@ -11,7 +11,6 @@ date: October 2025
 #include "file_list.h"
 #include "auxiliar.h"
 
-
 //*P0 commands
 void cmd_authors(type_args args, t_lists *lists);
 void cmd_getpid(type_args args, t_lists *lists);
@@ -52,6 +51,7 @@ void cmd_writefile(type_args args, t_lists *lists);
 void cmd_read(type_args args, t_lists *lists);
 void cmd_write(type_args args, t_lists *lists);
 void cmd_recurse(type_args args, t_lists *lists);
+
 //*end of P2 commands
 
 #endif /*COMANNDS_H*/

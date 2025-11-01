@@ -7,8 +7,8 @@ LDFLAGS =
 
 TARGET = a.out
 
-SOURCES = p2.c auxiliar.c commands.c historic_list.c file_list.c
-HEADERS = macros.h types.h auxiliar.h commands.h historic_list.h file_list.h
+SOURCES = p2.c auxiliar.c commands.c historic_list.c file_list.c mem_list.c
+HEADERS = macros.h types.h auxiliar.h commands.h historic_list.h file_list.h mem_list
 OBJECTS = $(SOURCES:.c=.o)
 
 all: $(TARGET)
