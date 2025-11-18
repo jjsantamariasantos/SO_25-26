@@ -1272,35 +1272,40 @@ void cmd_lseek(type_args args, t_lists *lists)
 {
     int fd, ref;
     off_t offset;
+    
+    if(args.length > 1){
+        if (!string_to_int(args.input[1], &fd))
+        {
+            print_error(args.input[0], "Invalid file descriptor");
+            return;
+        }
 
-    if (!string_to_int(args.input[1], &fd))
-    {
-        print_error(args.input[0], "Invalid file descriptor");
-        return;
+        if (fd < 0)
+        {
+            print_error(args.input[0], "fd must be a non-negative integer");
+            return;
+        }
+        long temp_offset;
+        if (!string_to_int(args.input[2], (int *)&temp_offset))
+        {
+            print_error(args.input[0], "Invalid offset");
+            return;
+        }
+        offset = (off_t)temp_offset;
+
+        ref = get_ref(args.input[3]);
+        if (ref == -1)
+        {
+            print_error(args.input[0], "Invalid reference (use SEEK_SET, SEEK_CUR, or SEEK_END)");
+            return;
+        }
+
+        lseek_aux(args, &lists->files, fd, offset, ref);
     }
+    print_error(args.input[0], "Incorrect parameters");
+    
 
-    if (fd < 0)
-    {
-        print_error(args.input[0], "fd must be a non-negative integer");
-        return;
-    }
 
-    long temp_offset;
-    if (!string_to_int(args.input[2], (int *)&temp_offset))
-    {
-        print_error(args.input[0], "Invalid offset");
-        return;
-    }
-    offset = (off_t)temp_offset;
-
-    ref = get_ref(args.input[3]);
-    if (ref == -1)
-    {
-        print_error(args.input[0], "Invalid reference (use SEEK_SET, SEEK_CUR, or SEEK_END)");
-        return;
-    }
-
-    lseek_aux(args, &lists->files, fd, offset, ref);
 }
 
 void writestr_aux(type_args args, t_list_file *list, int fd, char *str)
