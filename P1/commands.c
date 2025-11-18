@@ -1301,11 +1301,9 @@ void cmd_lseek(type_args args, t_lists *lists)
         }
 
         lseek_aux(args, &lists->files, fd, offset, ref);
+        return;
     }
     print_error(args.input[0], "Incorrect parameters");
-    
-
-
 }
 
 void writestr_aux(type_args args, t_list_file *list, int fd, char *str)
