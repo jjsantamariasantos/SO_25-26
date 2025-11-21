@@ -27,4 +27,6 @@ void initialize_file_list(t_list_file *L);
 bool string_to_int(char *str, int *num);
 void print_file_error(char *name, char *file);
 bool string_to_long(char *string, long *result);
+void free_mem_list(t_list_mem *list);
+void free_lists(t_lists *L);
 #endif /*AUXILIAR_H*/

@@ -1661,16 +1661,16 @@ void mmap_aux(type_args args, t_lists *L){
     void *p;
     int protection=0;
 
-    if((perm=args.input[3])!= NULL && strlen(perm) <4){
+    if((perm=args.input[2])!= NULL && strlen(perm) <4){
         if (strchr(perm, 'r') != NULL) protection |= PROT_READ;
         if (strchr(perm, 'w') != NULL) protection |= PROT_WRITE;
         if (strchr(perm, 'x') != NULL) protection |= PROT_EXEC;
     }
 
-    if((p = map_file(args.input[2], protection, args, L)) == NULL)
+    if((p = map_file(args.input[1], protection, args, L)) == NULL)
         print_system_error(args.input[0]);
     else
-        printf("file \033[34m%s\033[0m mapped to \033[32m%p\n\033[0m]", args.input[2], p);
+        printf("file \033[34m%s\033[0m mapped to \033[32m%p\n\033[0m]", args.input[1], p);
 }
 
 void free_mmap(type_args args, t_lists *L){
@@ -1709,17 +1709,17 @@ void cmd_mmap(type_args args, t_lists *lists){
     case 1:
         print_mem_list(lists->memory, M_MMAP);
         break;
-    case 2:
-        if(args.input[1][0]!='-'){
-            mmap_aux(args, lists);
-        }else
-            print_error(args.input[0], "Incorrect number of arguments");
-        break;
+
     case 3:
         if(args.input[1][0]=='-'){
-            free_mmap(args, lists);
+            if(strcmp(args.input[1],"-free") == 0){
+                free_mmap(args, lists);
+                return;
+            }
+            print_error(args.input[0], "Invalid arguments");
+                
         } else{
-            print_error(args.input[0], "Incorrect number of arguments");
+            mmap_aux(args, lists);
         }
         break;
     default:
@@ -1853,6 +1853,23 @@ void cmd_shared(type_args args, t_lists *lists){
             shared_aux(args, &lists->memory);
         }
         break;
+    case 3:
+        if(args.input[1][0]!='-'){
+            print_error(args.input[0], "Incorrect arguments");
+        }else{
+            if(strcmp(args.input[1],"-free") == 0){
+                free_shared(args, &lists->memory);
+                return;
+            }
+                
+            if(strcmp(args.input[1],"-delkey") == 0){
+                free_delkey(args, &lists->memory);
+                return;
+            }
+                
+            print_error(args.input[0], "Incorrect arguments");
+        }
+        break;
     case 4:
         if(args.input[1][0]!='-'){
             print_error(args.input[0], "Incorrect arguments");
@@ -1923,17 +1940,20 @@ void free_aux(type_args args, t_lists *L){
 void cmd_free(type_args args, t_lists *lists){
     if(args.length != 2 ){
         print_error(args.input[0], "Invalid arguments");
+        return;
     }
     if(args.input[1][0]=='-'){
         print_error(args.input[0], "Invalid arguments");
+        return;
     }
+
     free_aux(args, lists);
 }
 
 void memfill_aux(type_args args){
-    void *p = string_to_void_pointer(args.input[0]);
-    unsigned char byte = (unsigned char)atoi(args.input[1]);
+    void *p = string_to_void_pointer(args.input[1]);
     size_t size = (size_t)strtoul(args.input[2], NULL, 10);
+    unsigned char byte = (unsigned char)atoi(args.input[3]);
         unsigned char *arr = (unsigned char *)p;
 
     for (size_t i = 0; i < size; i++)
@@ -1964,7 +1984,7 @@ void memdump_aux(void *addr,size_t cont){
     
     for(size_t i = 0; i < cont; i++){  
         if(i % 16 == 0)
-            printf("\033[32m%p\033[0m", mem + 1);
+            printf("\033[32m%p\033[0m  ", mem + i);
         
         printf("%02X ", mem[i]);
 
@@ -1989,7 +2009,7 @@ void memdump_aux(void *addr,size_t cont){
                     printf("\\t");
                 } else if (c == '\r') {
                     printf("\\r");
-                } else if (c >= 32 && c <= 126) {
+                } else if (c && c <= 126) {
                     printf("%c", c);
                 } else {
                     printf(".");
@@ -2007,10 +2027,10 @@ void cmd_memdump(type_args args, t_lists *lists){
     switch (args.length)
     {
     case 2:
-        memdump_aux(string_to_void_pointer(args.input[0]), (size_t)20);
+        memdump_aux(string_to_void_pointer(args.input[1]), (size_t)32);
         break;
     case 3:
-        memdump_aux(string_to_void_pointer(args.input[0]), (size_t)strtoul(args.input[1], NULL, 10));
+        memdump_aux(string_to_void_pointer(args.input[1]), (size_t)strtoul(args.input[2], NULL, 10));
         break;
     default:
         print_error(args.input[0], "Invalid num of arguments");
@@ -2155,7 +2175,7 @@ void cmd_readfile(type_args args, t_lists *lists)
 
 ssize_t do_writefile(char *fname, void *addr, size_t cont, int mode){
     int fd;
-
+    
     if ((fd = open(fname, mode, 0777)) == -1)
         return -1;
 
@@ -2239,7 +2259,7 @@ void cmd_writefile(type_args args, t_lists *lists)
         return -1;
 
     if (cont == (size_t)-1)
-      cont = 0;
+        cont = 0;
 
     return read(fd, addr, cont);
 }

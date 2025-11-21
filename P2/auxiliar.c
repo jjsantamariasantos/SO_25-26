@@ -261,3 +261,39 @@ bool string_to_long(char *string, long *result){
         return false;
     return true;
 }
+
+void free_mem_list(t_list_mem *list){
+    t_pos_mem p; t_item_mem item;
+
+    while (!is_empty_list_mem(*list)) {
+        p = last_mem(*list);
+
+        item = get_item_mem(p, *list);
+        switch (item.type)
+        {
+        case M_MALLOC:
+            free(item.addr);
+            break;
+        case M_MMAP:
+            munmap(item.addr, item.size);
+            break;
+        case M_SHARED:
+            int id;
+            shmdt(item.addr);
+            if ((id = shmget(item.key, 0, 0666)) != -1)
+            {
+                shmctl(id, IPC_RMID, NULL);
+            }
+            break;
+        default:
+            return;
+        }
+        delete_at_position_mem(p, list);
+    }
+}
+
+void free_lists(t_lists *L){
+    free_file_list(&L->files);
+    free_historic_list(&L->historic);
+    free_mem_list(&L->memory);
+}

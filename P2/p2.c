@@ -26,6 +26,7 @@ void shell_loop()
     create_empty_list_historic(&L.historic);
     create_empty_list_file(&L.files);
     initialize_file_list(&L.files);
+    create_empty_list_mem(&L.memory);
     L.dir_flags = 0;
 
     while (!exit_shell)
@@ -34,7 +35,5 @@ void shell_loop()
         if (read_input(&L))
             process_input(&L, &exit_shell);
     }
-
-    free_historic_list(&L.historic);
-    free_file_list(&L.files);
+    free_lists(&L);   
 }
