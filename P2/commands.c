@@ -2007,7 +2007,7 @@ void cmd_memdump(type_args args, t_lists *lists){
     switch (args.length)
     {
     case 2:
-        memdump_aux(string_to_void_pointer(args.input[0), (size_t)20);
+        memdump_aux(string_to_void_pointer(args.input[0]), (size_t)20);
         break;
     case 3:
         memdump_aux(string_to_void_pointer(args.input[0]), (size_t)strtoul(args.input[1], NULL, 10));
