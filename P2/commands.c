@@ -1931,7 +1931,7 @@ void cmd_free(type_args args, t_lists *lists){
 }
 
 void memfill_aux(type_args args){
-    void *p = string_to_void_pointer(args.input[0]]);
+    void *p = string_to_void_pointer(args.input[0]);
     unsigned char byte = (unsigned char)atoi(args.input[1]);
     size_t size = (size_t)strtoul(args.input[2], NULL, 10);
         unsigned char *arr = (unsigned char *)p;
