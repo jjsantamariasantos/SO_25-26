@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=gnu99 -g
 LDFLAGS = 
 
-TARGET = a.out
+TARGET = p2
 
 SOURCES = vars.c p2.c auxiliar.c commands.c historic_list.c file_list.c mem_list.c 
 HEADERS = macros.h types.h auxiliar.h commands.h historic_list.h file_list.h mem_list
