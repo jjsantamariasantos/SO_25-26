@@ -1554,7 +1554,7 @@ void *string_to_void_pointer(char *str){
 }
 
 void malloc_aux(type_args args, t_list_mem *list){
-    long size=get_size(args.input[2]);
+    long size=get_size(args.input[1]);
     void *block= NULL;
     t_item_mem item;
 
@@ -1788,7 +1788,7 @@ void create_shared_aux(type_args args, t_list_mem *list){
 void shared_aux(type_args args, t_list_mem *list){
     key_t cl; void *p;
 
-    cl = (key_t)strtoul(args.input[2] , NULL, 10);
+    cl = (key_t)strtoul(args.input[1] , NULL, 10);
 
     if ((p = get_mem_shmget(cl, 0, args, list)) != NULL)
         printf("Shared memory allocated for key \033[33m%lu\033[0m on \033[32m%p\n \033[0m",
@@ -1931,9 +1931,9 @@ void cmd_free(type_args args, t_lists *lists){
 }
 
 void memfill_aux(type_args args){
-    void *p = string_to_void_pointer(args.input[1]);
-    unsigned char byte = (unsigned char)atoi(args.input[2]);
-    size_t size = (size_t)strtoul(args.input[3], NULL, 10);
+    void *p = string_to_void_pointer(args.input[0]]);
+    unsigned char byte = (unsigned char)atoi(args.input[1]);
+    size_t size = (size_t)strtoul(args.input[2], NULL, 10);
         unsigned char *arr = (unsigned char *)p;
 
     for (size_t i = 0; i < size; i++)
@@ -2007,10 +2007,10 @@ void cmd_memdump(type_args args, t_lists *lists){
     switch (args.length)
     {
     case 2:
-        memdump_aux(string_to_void_pointer(args.input[1]), (size_t)20);
+        memdump_aux(string_to_void_pointer(args.input[0), (size_t)20);
         break;
     case 3:
-        memdump_aux(string_to_void_pointer(args.input[1]), (size_t)strtoul(args.input[2], NULL, 10));
+        memdump_aux(string_to_void_pointer(args.input[0]), (size_t)strtoul(args.input[1], NULL, 10));
         break;
     default:
         print_error(args.input[0], "Invalid num of arguments");
