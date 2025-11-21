@@ -253,3 +253,11 @@ void print_file_error(char *name, char *file)
     fprintf(stderr, "\033[1;31mError: %s: %s: %s\033[0m\n",
         name, file, strerror(errno));
 }
+
+bool string_to_long(char *string, long *result){
+    char *end_ptr = NULL;
+    *result = strtol(string, &end_ptr, 10);
+    if(*end_ptr != '\0')
+        return false;
+    return true;
+}

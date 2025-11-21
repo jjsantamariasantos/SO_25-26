@@ -6,7 +6,7 @@ date: October 2025
 #ifndef MACROS_H
 #define MACROS_H
 
-#define PROMPT "P1:~$ "
+#define PROMPT "P2:~$ "
 
 //* macros for general use
 #define MAX_INPUT_SIZE 1024

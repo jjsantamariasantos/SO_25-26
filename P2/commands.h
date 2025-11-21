@@ -9,6 +9,7 @@ date: October 2025
 #include "types.h"
 #include "historic_list.h"
 #include "file_list.h"
+#include "mem_list.h"
 #include "auxiliar.h"
 
 //*P0 commands
@@ -51,7 +52,6 @@ void cmd_writefile(type_args args, t_lists *lists);
 void cmd_read(type_args args, t_lists *lists);
 void cmd_write(type_args args, t_lists *lists);
 void cmd_recurse(type_args args, t_lists *lists);
-
 //*end of P2 commands
 
 #endif /*COMANNDS_H*/

@@ -13,7 +13,7 @@ typedef struct t_item_mem
     int key;
 } t_item_mem;
 
-struct t_node_mem
+typedef struct t_node_mem
 {
     t_item_mem item;
     struct t_node_mem *prev;

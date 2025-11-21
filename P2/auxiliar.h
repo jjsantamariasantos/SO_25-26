@@ -25,5 +25,6 @@ int get_commands_length();
 void get_commands(t_command *commands_copy);
 void initialize_file_list(t_list_file *L);
 bool string_to_int(char *str, int *num);
-void print_file_error(char * name, char *file);
+void print_file_error(char *name, char *file);
+bool string_to_long(char *string, long *result);
 #endif /*AUXILIAR_H*/

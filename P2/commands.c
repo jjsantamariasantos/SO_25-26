@@ -14,6 +14,13 @@ void open_dir(type_args args, char *path, unsigned char flags,
 char *build_path(char *relative_path, char *full_path);
 bool is_directory(type_args args, char *path);
 void delete_aux(type_args args, void function(type_args args, int n, unsigned char flags, char *full_path));
+time_t get_time(type_args args);
+long get_size(char *size);
+char *print_mem_list_aux(t_item_mem item);
+void print_mem_list(t_list_mem list, unsigned char type);
+void print_mem_list_title(unsigned char type);
+void print_time(time_t time);
+void *string_to_void_pointer(char *str);
 //*end of multiple commands auxiliary functions
 
 //* authors auxiliary functions
@@ -81,6 +88,61 @@ void lseek_aux(type_args args, t_list_file *list, int fd, off_t offset, int ref)
 //*writestr auxiliary functions
 void writestr_aux(type_args args, t_list_file *list, int fd, char *str);
 //*end of writestr auxiliary functions
+
+//*malloc auxiliary functions
+void malloc_aux(type_args args, t_list_mem *list);
+void free_malloc(type_args args, t_list_mem *list);
+//*end of malloc auxiliary functions
+
+//*mmap auxiliary functions
+void *map_file(char *file, int protection, type_args args, t_lists *L);
+void mmap_aux(type_args args, t_lists *L);
+void free_mmap(type_args args, t_lists *L);
+//*end of mmap auxiliary functions
+void *get_mem_shmget(key_t key, size_t size, type_args args, t_list_mem *list);
+void create_shared_aux(type_args args, t_list_mem *list);
+void shared_aux(type_args args, t_list_mem *list);
+void free_shared(type_args args, t_list_mem *list);
+void free_delkey(type_args args, t_list_mem *list);
+//*shared auxiliary functions
+
+//*free auxiliary functions
+void free_aux(type_args args, t_lists *L);
+//*end of free auxiliary functions
+
+//*memfill auxiliary functions
+void memfill_aux(type_args args);
+//*end of memfill auxiliary functions
+
+//*memdump auxiliary functions
+void memdump_aux(void *addr,size_t cont);
+//*end of memdump auxiliary functions
+
+//*mem auxiliary functions
+void mem_vars();
+void mem_funcs();
+void mem_mmap();
+//*end of mem auxiliary functions
+
+//*readfile auxiliary functions
+ssize_t do_readfile(char *fname, void *addr, size_t cont);
+//*end of readfile auxiliary functions
+
+//*writefile auxiliary functions
+ssize_t do_writefile(char *fname, void *addr, size_t cont, int mode);
+//*end of writefile auxiliary functions
+
+//*read auxiliary functions
+ ssize_t read_open_file(int fd, void *addr, size_t cont, t_list_file files);
+//*end of read auxiliary functions
+
+//*write auxiliary functions
+ssize_t write_open_file(int fd, void *addr, size_t cont, t_list_file files);
+//*end of write auxiliary functions
+
+//*recurse auxiliary functions
+void recurse_internal(int n);
+///*end of write auxiliary functions
 
 //*end of auxiliary functions for commands
 
@@ -1369,40 +1431,921 @@ void cmd_writestr(type_args args, t_lists *lists)
 /****************************************************
  *                FUNCIONES P2                      *
  ****************************************************/
+time_t get_time(type_args args){
+    time_t now;
+    time(&now);
+
+    if (now == -1)
+    {
+        print_system_error(args.input[0]);
+    }
+
+    return now;
+}
+long get_size(char *size){
+    long result;
+
+    if (!string_to_long(size, &result)) { return -1; }
+    
+    if (result <= 0) { return -1; }
+
+    return result;
+}
+
+void print_time(time_t time){
+    const char* months[] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    int seconds, minutes, hours, day, month;
+    struct tm *local_time= localtime(&time);
+
+    seconds=local_time->tm_sec;
+    minutes=local_time->tm_min;
+    hours=local_time->tm_hour;
+    day=local_time->tm_mday;
+    month=local_time->tm_mon +1;
+
+    if (month < 1 || month > 12) {
+        print_error("Time","Couldnt get the month"); 
+        return;
+    }
+    printf("\033[34m%s %d%5d:%d:%d\033[0m", months[month], day,hours,minutes,seconds);
+    
+}
+char *print_mem_list_aux(t_item_mem item){
+    char *str;
+    size_t len;
+
+    switch (item.type)
+    {
+    case M_MALLOC:
+        len = strlen("malloc") + 1; 
+        str = malloc(len);
+        if (str == NULL) return NULL; 
+        strcpy(str, "malloc");
+        return str;
+
+    case M_MMAP:
+        len = strlen(item.name) + strlen(" (fd )") + 10 + 1;
+        str = malloc(len);
+        if (str == NULL) return NULL; 
+        sprintf(str, "%s (fd %d)", item.name, item.key);
+        return str;
+
+    case M_SHARED:
+        len = strlen("shared (key )") + strlen("\033[33m") + strlen("\033[0m") + 10 + 1;
+        str = malloc(len);
+        if (str == NULL) return NULL; 
+        sprintf(str, "shared (key %s%d%s)", "\033[33m", item.key, "\033[0m");
+        return str;
+
+    default:
+        len = strlen("error") + 1;
+        str = malloc(len);
+        if (str == NULL) return NULL; 
+        strcpy(str, "error");
+        return str;
+    }
+}
+void print_mem_list(t_list_mem list, unsigned char type){
+    t_pos_mem p =first_mem(list);
+    t_item_mem item;
+    char *msg;
+
+    print_mem_list_title(type);
+
+    for(; p != MNULL; p=next_mem(p,list)){
+        item=get_item_mem(p, list);
+        if(item.type & type){
+            printf("\033[32m%20p %10ld\033[0m ",item.addr, item.size);
+            print_time(item.date);
+            msg=print_mem_list_aux(item);
+            printf(" %s\n", msg);
+            free(msg);
+        }
+    }
+}
+
+void print_mem_list_title(unsigned char type){
+    switch (type)
+    {
+    case M_ALL:
+        printf("----- List of blocks allocated for process \033[32m%d -----\n\033[0m ", getpid());
+        break;
+    case M_MALLOC:
+        printf("----- List of malloc allocated blocks for process \033[32m%d -----\n\033[0m ", getpid());
+        break;
+    case M_MMAP:
+        printf("----- List of mmap allocated blocks for process \033[32m%d -----\n\033[0m ", getpid());
+        break;
+    case M_SHARED:
+        printf("----- List of shared allocated blocks for process \033[32m%d -----\n\033[0m ", getpid());
+        break;
+    default:
+        print_error("Title", "Title error");
+        break;
+    }
+}
+
+void *string_to_void_pointer(char *str){
+    unsigned long address =strtoul(str, NULL, 16);
+    return (void *)address;
+}
+
+void malloc_aux(type_args args, t_list_mem *list){
+    long size=get_size(args.input[2]);
+    void *block= NULL;
+    t_item_mem item;
+
+    if(size == -1){
+        print_error(args.input[0], "Invalid Size");
+        return;
+    }
+    block=malloc(size);
+    if(block==NULL){
+        print_error(args.input[0], "Can't allocate memory");
+        return;
+    }
+    item.addr=block;
+    item.date=get_time(args);
+    item.key=-1;
+    item.size=size;
+    item.type=M_MALLOC;
+    insert_item_mem(item,NULL,list);
+    printf("Allocated \033[034m%ld bytes\033[0m at \033[032m%p\n\033[0m",size, block);
+} 
+
+void free_malloc(type_args args, t_list_mem *list){
+    long size = get_size(args.input[2]);
+    
+    if(size == -1){
+        print_error(args.input[0],"Error size");
+        return;
+    }
+
+    t_pos_mem pos = find_item_malloc_mem_by_size(size, *list);
+    if(pos != MNULL){
+        t_item_mem item = get_item_mem(pos, *list);
+
+        free(item.addr);
+        delete_at_position_mem(pos, list);
+    } else{
+        printf("\033[31mThere is no block of size\033[0m \033[34m%ld\033[34m allocated with malloc\n", size);
+    }
+}
 
 void cmd_malloc(type_args args, t_lists *lists){
+    switch (args.length){
+    case 1:
+        print_mem_list(lists->memory, M_MALLOC);
+        break;
+    case 2:
+        if(strcmp(args.input[1], "-free") == 0){
+            print_error(args.input[0], "Incorrect number of arguments");
+        } else if(args.input[1][0] != '-'){
+            malloc_aux(args, &lists->memory);
+        } else{
+            print_error(args.input[0], "Incorrect arguments");
+        }
+        break;
+    case 3:
+        if(strcmp(args.input[1], "-free") == 0){
+            free_malloc(args, &lists->memory);
+        } else{
+            print_error(args.input[0], "Incorrect arguments");
+        }
+        break;
+    default:
+        print_error(args.input[0], "Incorrect number of arguments");
+        break;
+    }
+}
+void *map_file(char *file, int protection, type_args args, t_lists *L){
+    int fd, map=MAP_PRIVATE, mode=O_RDONLY;
+    struct stat s;
+    void *p;
 
+    if(protection&PROT_WRITE)
+        mode=O_RDWR;
+    if(stat(file, &s)==-1 || (fd=open(file, mode))==-1)
+        return NULL;
+    if((p = mmap(NULL, s.st_size, protection, map, fd, 0))==MAP_FAILED)
+        return NULL;
+    
+    t_item_mem item;
+    item.addr = p;
+    strcpy(item.name, file);
+    item.date =get_time(args);
+    item.key = fd;
+    item.size = s.st_size;
+    item.type = M_MMAP;
+
+    insert_item_mem(item, MNULL, &L->memory);
+    
+    t_item_file item_f;
+    item_f.fd = fd;
+    strcpy(item_f.file_name, file);
+    item_f.mode = mode;
+
+    t_pos_file pos = find_item_file(item_f.fd, L->files);
+    if(pos==FNULL){
+        insert_item_file(item_f, pos, &L->files);
+
+    }
+    update_item_file(item_f, pos, &L->files);
+    return(p);       
+}
+void mmap_aux(type_args args, t_lists *L){
+    char *perm;
+    void *p;
+    int protection=0;
+
+    if((perm=args.input[3])!= NULL && strlen(perm) <4){
+        if (strchr(perm, 'r') != NULL) protection |= PROT_READ;
+        if (strchr(perm, 'w') != NULL) protection |= PROT_WRITE;
+        if (strchr(perm, 'x') != NULL) protection |= PROT_EXEC;
+    }
+
+    if((p = map_file(args.input[2], protection, args, L)) == NULL)
+        print_system_error(args.input[0]);
+    else
+        printf("file \033[34m%s\033[0m mapped to \033[32m%p\n\033[0m]", args.input[2], p);
+}
+
+void free_mmap(type_args args, t_lists *L){
+    t_pos_mem pos = find_item_mmap_mem_by_name(args.input[2], L->memory);
+
+    if(pos != MNULL){
+        t_item_mem item=get_item_mem(pos, L->memory);
+
+        if(munmap(item.addr, item.size) == -1){
+            print_system_error(args.input[0]);
+            return;
+        }
+        delete_at_position_mem(pos, &L->memory);
+        t_item_file item_f;
+        t_pos_file pos_f;
+        pos_f = find_item_file(item.key, L->files);
+        if(pos_f != FNULL){
+            if(item.key <= 19){
+                item_f = get_item_file(pos_f,L->files);
+                strcpy(item_f.file_name,"unused");
+                item_f.mode = SNULL;
+                update_item_file(item_f,pos_f,&L->files);
+                return;
+            }else{
+                delete_at_position_file(pos_f, &L->files);
+                return;
+            }
+        }
+    }else{
+        printf("File \033[34m%s\033[0m was not mapped\n",args.input[2]);
+    }
 }
 void cmd_mmap(type_args args, t_lists *lists){
-
+    switch (args.length)
+    {
+    case 1:
+        print_mem_list(lists->memory, M_MMAP);
+        break;
+    case 2:
+        if(args.input[1][0]!='-'){
+            mmap_aux(args, lists);
+        }else
+            print_error(args.input[0], "Incorrect number of arguments");
+        break;
+    case 3:
+        if(args.input[1][0]=='-'){
+            free_mmap(args, lists);
+        } else{
+            print_error(args.input[0], "Incorrect number of arguments");
+        }
+        break;
+    default:
+        print_error(args.input[0], "Incorrect number of arguments");
+        break;
+    }
 }
+
+void *get_mem_shmget(key_t key, size_t size, type_args args, t_list_mem *list){
+    void *p; int aux, id, flags = 0777; struct shmid_ds s;
+
+    if (size) 
+    {  
+        flags = flags | IPC_CREAT | IPC_EXCL; 
+    }
+    if (key == IPC_PRIVATE) 
+    {  
+        errno = EINVAL; return NULL; 
+    }
+    if ((id = shmget(key, size, flags)) == -1)
+        return (NULL);
+    if ((p = shmat(id, NULL, 0)) == (void *)-1)
+    {
+        aux = errno;
+
+        if (size)
+            shmctl(id, IPC_RMID, NULL);
+
+        errno = aux;
+        return (NULL);
+    }
+
+    shmctl(id, IPC_STAT, &s);
+    
+    t_item_mem item;
+    item.addr = p;
+    item.type = M_SHARED;
+    item.date = get_time(args);
+    item.key = key;
+    item.size = s.shm_segsz; 
+
+    insert_item_mem(item, MNULL, list);
+    return (p);
+}
+
+void create_shared_aux(type_args args, t_list_mem *list){
+    key_t cl; size_t size; void *p;
+
+    cl  = (key_t)strtoul(args.input[2] , NULL, 10);
+    size = (size_t)strtoul(args.input[3], NULL, 10);
+
+    if (size == 0) 
+    {
+        print_error(args.input[0] ,"Invalid size");
+        return;
+    }
+
+    if ((p = get_mem_shmget(cl, size, args, list)) != NULL)
+        printf("Allocated \033[33m%lu\033[0m bytes in \033[32m%p\n\033[0m",
+                (unsigned long)size, p);
+    else
+        printf("Unable to allocate shared memory key \033[33m%lu\033[0m: \033[1m\033[31m%s\n\033[0m]",
+            (unsigned long)cl, strerror(errno));
+}
+
+void shared_aux(type_args args, t_list_mem *list){
+    key_t cl; void *p;
+
+    cl = (key_t)strtoul(args.input[2] , NULL, 10);
+
+    if ((p = get_mem_shmget(cl, 0, args, list)) != NULL)
+        printf("Shared memory allocated for key \033[33m%lu\033[0m on \033[32m%p\n \033[0m",
+            (unsigned long)cl, p);
+    else
+        printf("Unable to allocate shared memory key  \033[33m%lu \033[0m: \033[1m\033[31m%s\n\033[0m",
+            (unsigned long)cl, strerror(errno));
+    }
+
+void free_shared(type_args args, t_list_mem *list){
+    key_t key = (key_t)(strtoul(args.input[2], NULL, 10));
+    t_pos_mem pos = find_item_shared_mem_by_key(key, *list);
+
+    if (pos != MNULL)
+    {
+        t_item_mem item = get_item_mem(pos, *list);
+
+        if (shmdt(item.addr) == 0) 
+        {
+            printf("Detached shared memory key \033[33m%d\033[0m from address \033[32m%p\n\033[0m",
+                item.key, pos);
+            delete_at_position_mem(pos, list);
+        }
+        else
+            print_system_error(args.input[0]);
+    }
+    else
+        printf("There is no block with key \033[33m%d\033[0m mapped in the process\n",
+                key);
+}  
+
+void free_delkey(type_args args, t_list_mem *list){
+   UNUSED(list); key_t key; int id; char *keyStr = args.input[2];
+
+    if ((key = (key_t)strtoul(keyStr, NULL, 10)) == IPC_PRIVATE)
+    {
+        print_error(args.input[0], "");
+        printf("delkey needs valid_key\n");
+        return;
+    }
+    if ((id = shmget(key, 0, 0666)) == -1)
+    { 
+        print_system_error(args.input[0]);
+        return;
+    }
+    if (shmctl(id, IPC_RMID, NULL) == -1)
+    { 
+        print_system_error(args.input[0]);
+    }
+}
+
 void cmd_shared(type_args args, t_lists *lists){
-
+    switch (args.length)
+    {
+    case 1:
+        print_mem_list(lists->memory, M_SHARED);
+        break;
+    case 2:
+        if(args.input[1][0] == '-'){
+            print_error(args.input[0], "Incorrect arguments");
+        }else{
+            shared_aux(args, &lists->memory);
+        }
+        break;
+    case 4:
+        if(args.input[1][0]!='-'){
+            print_error(args.input[0], "Incorrect arguments");
+        }else{
+            create_shared_aux(args, &lists->memory);
+        }
+        break;
+    default:
+        print_error(args.input[0], "Incorrect arguments");
+        break;
+    }
 }
+
+void free_aux(type_args args, t_lists *L){
+    void* ptr = string_to_void_pointer(args.input[1]);
+    t_pos_mem p = find_item_mem_by_addr(ptr, L->memory);
+
+    if (p != MNULL)
+    {
+        t_item_mem item = get_item_mem(p, L->memory);
+
+        switch (item.type)
+        {
+        case M_MALLOC:
+            free(item.addr);
+            break;
+        case M_MMAP:
+            // Unmap the file
+            if (munmap(item.addr, item.size) == -1) 
+            {
+                print_system_error(args.input[0]);
+                return;
+            }
+            t_item_file item_f;
+            t_pos_file pos_f;
+            pos_f = find_item_file(item.key, L->files);
+            if(pos_f != FNULL){
+                if(item.key <= 19){
+                    item_f = get_item_file(pos_f, L->files);
+                    strcpy(item_f.file_name,"unused");
+                    item_f.mode = SNULL;
+                    update_item_file(item_f, pos_f, &L->files);
+                    return;
+                }else{
+                    delete_at_position_file(pos_f, &L->files);
+                    return;
+                }
+            }
+            break;
+        case M_SHARED:
+            if (shmdt(item.addr) != 0) 
+            {
+                print_system_error(args.input[0]);
+            }
+            break;
+        default:
+            print_error(args.input[0], "Unknown block type");
+            return;
+        }
+        delete_at_position_mem(p, &L->memory);
+    }
+    else
+    {
+        printf("Address \033[32m%p\033[0m not allocated with malloc, shared or mmap\n", ptr);
+    }
+}
+
 void cmd_free(type_args args, t_lists *lists){
-    
+    if(args.length != 2 ){
+        print_error(args.input[0], "Invalid arguments");
+    }
+    if(args.input[1][0]=='-'){
+        print_error(args.input[0], "Invalid arguments");
+    }
+    free_aux(args, lists);
 }
+
+void memfill_aux(type_args args){
+    void *p = string_to_void_pointer(args.input[1]);
+    unsigned char byte = (unsigned char)atoi(args.input[2]);
+    size_t size = (size_t)strtoul(args.input[3], NULL, 10);
+        unsigned char *arr = (unsigned char *)p;
+
+    for (size_t i = 0; i < size; i++)
+        arr[i] = byte;
+    
+    printf("Filling \033[34m%zu\033[0m bytes of memory with byte (\033[33m%02x\033[0m) starting at address \033[32m%p\033[0m\n",
+        size, byte, p);
+}
+
 void cmd_memfill(type_args args, t_lists *lists){
-
-}
-void cmd_memdump(type_args args, t_lists *lists){
-
-}
-void cmd_mem(type_args args, t_lists *lists){
-
-}
-void cmd_readfile(type_args args, t_lists *lists){
-
-}
-void cmd_writefile(type_args args, t_lists *lists){
-
-}
-void cmd_read(type_args args, t_lists *lists){
-
-}
-void cmd_write(type_args args, t_lists *lists){
-
-}
-void cmd_recurse(type_args args, t_lists *lists){
+    UNUSED(lists);
+    switch (args.length)
+    {
+    case 4:
+        memfill_aux(args);
+        break;
     
+    default:
+        print_error(args.input[0],"Invalid argument");
+        break;
+    }
+}
+
+void memdump_aux(void *addr,size_t cont){
+    unsigned char *mem = (unsigned char *) addr;
+
+    printf("Dumping \033[34m%zu\033[0m bytes from address \033[32m%p\n\n\033[0m",cont, addr);
+    
+    for(size_t i = 0; i < cont; i++){  
+        if(i % 16 == 0)
+            printf("\033[32m%p\033[0m", mem + 1);
+        
+        printf("%02X ", mem[i]);
+
+        if(i % 16 == 7)
+            printf(" ");
+
+        if((i % 16)== 15 || i == cont - 1){
+            for(size_t j = (i % 16) + 1; j < 16; j++){
+                printf("  ");
+                if(j == 8)printf(" ");
+            }
+
+            printf(" | ");
+
+            size_t start = i - (i % 16);
+            for (size_t j = start; j <= i; j++) {
+                unsigned char c = mem[j];
+                
+                if (c == '\n') {
+                    printf("\\n");
+                } else if (c == '\t') {
+                    printf("\\t");
+                } else if (c == '\r') {
+                    printf("\\r");
+                } else if (c >= 32 && c <= 126) {
+                    printf("%c", c);
+                } else {
+                    printf(".");
+                }
+            }
+            printf("|\n");
+        }
+    }
+    printf("\n");
+}
+
+void cmd_memdump(type_args args, t_lists *lists){
+    UNUSED(lists);
+
+    switch (args.length)
+    {
+    case 2:
+        memdump_aux(string_to_void_pointer(args.input[1]), (size_t)20);
+        break;
+    case 3:
+        memdump_aux(string_to_void_pointer(args.input[1]), (size_t)strtoul(args.input[2], NULL, 10));
+        break;
+    default:
+        print_error(args.input[0], "Invalid num of arguments");
+        break;
+    }
+}
+extern int ext_var1, ext_var2, ext_var3;
+extern int ext_init_var1, ext_init_var2, ext_init_var3;
+static int static_var1, static_var2, static_var3;
+static int static_init_var1 = 10, static_init_var2 = 20, static_init_var3 = 30;
+void mem_vars()
+{
+    int auto1 = 1, auto2 = 2, auto3 = 3;
+
+    printf("Variables locales       %p, %p, %p\n", &auto1, &auto2, &auto3);
+
+    printf("Globales init           %p, %p, %p\n",
+           &ext_init_var1, &ext_init_var2, &ext_init_var3);
+
+    printf("Globales N.I.           %p, %p, %p\n",
+           &ext_var1, &ext_var2, &ext_var3);
+
+    printf("Static init             %p, %p, %p\n",
+           &static_init_var1, &static_init_var2, &static_init_var3);
+
+    printf("Static N.I.             %p, %p, %p\n",
+           &static_var1, &static_var2, &static_var3);
+}
+
+void mem_funcs(){
+    printf("Funciones programa      %p, %p, %p\n",
+    cmd_mem, cmd_readfile, cmd_recurse);
+
+    printf("Funciones libreria      %p, %p, %p\n",
+        printf, malloc, free);
+}
+
+static void mem_pmap()
+{
+    pid_t pid;
+    char pidstr[32];
+    sprintf(pidstr, "%d", getpid());
+
+    char *cmd1[] = {"pmap", pidstr, NULL};
+    char *cmd2[] = {"procstat", "vm", pidstr, NULL};
+    char *cmd3[] = {"procmap", pidstr, NULL};
+    char *cmd4[] = {"vmmap", "-interleave", pidstr, NULL};
+
+    if ((pid = fork()) == -1)
+    {
+        print_system_error("fork");
+        return;
+    }
+
+    if (pid == 0)
+    {
+        execvp(cmd1[0], cmd1);
+        execvp(cmd2[0], cmd2);
+        execvp(cmd3[0], cmd3);
+        execvp(cmd4[0], cmd4);
+        print_system_error("execvp");
+        exit(1);
+    }
+
+    waitpid(pid, NULL, 0);
+}
+
+void cmd_mem(type_args args, t_lists *lists)
+{
+    if (args.length == 1)
+    {
+        mem_vars();
+        mem_funcs();
+        print_mem_list(lists->memory, M_ALL);
+        return;
+    }
+
+    if (strcmp(args.input[1], "-blocks") == 0)
+        print_mem_list(lists->memory, M_ALL);
+
+    else if (strcmp(args.input[1], "-funcs") == 0)
+        mem_funcs();
+
+    else if (strcmp(args.input[1], "-vars") == 0)
+        mem_vars();
+
+    else if (strcmp(args.input[1], "-all") == 0)
+    {
+        mem_vars();
+        mem_funcs();
+        print_mem_list(lists->memory, M_ALL);
+    }
+    else if (strcmp(args.input[1], "-pmap") == 0)
+        mem_pmap();
+
+    else
+        print_error(args.input[0], "Invalid argument");
+}
+
+ssize_t do_readfile(char *fname, void *addr, size_t cont)
+{
+    struct stat st;
+    int fd;
+
+    if (stat(fname, &st) == -1)
+        return -1;
+
+    if ((fd = open(fname, O_RDONLY)) == -1)
+        return -1;
+
+    if (cont == (size_t)-1)
+        cont = 0;
+
+    ssize_t n = read(fd, addr, cont);
+    int e = errno;
+    close(fd);
+    errno = e;
+    return n;
+}
+
+void cmd_readfile(type_args args, t_lists *lists)
+{
+    UNUSED(lists);
+
+    if (args.length != 4)
+    {
+        print_error(args.input[0], "Usage: readfile file addr cont");
+        return;
+    }
+    
+    void *addr = string_to_void_pointer(args.input[2]);
+    if (!addr) return;
+
+    size_t cont = (size_t)atoll(args.input[3]);
+
+    ssize_t n = do_readfile(args.input[1], addr, cont);
+    if (n == -1)
+        print_system_error(args.input[0]);
+    else
+        printf("read %lld bytes from %s into %p\n", (long long)n, args.input[1], addr);
+}
+
+ssize_t do_writefile(char *fname, void *addr, size_t cont, int mode){
+    int fd;
+
+    if ((fd = open(fname, mode, 0777)) == -1)
+        return -1;
+
+    if (cont == (size_t)-1)
+        cont = 0;
+
+    ssize_t n = write(fd, addr, cont);
+    int e = errno;
+    close(fd);
+    errno = e;
+    return n;
+}
+
+
+void cmd_writefile(type_args args, t_lists *lists)
+{
+    UNUSED(lists);
+
+    int overwrite = 0;
+    char *file, *addr_str, *cont_str = NULL;
+
+
+    if (args.length < 3 || args.length > 5)
+    {
+        print_error(args.input[0], "Usage: writefile [-o] file addr [cont]");
+        return;
+    }
+
+    if (strcmp(args.input[1], "-o") == 0)
+    {
+        overwrite = 1;
+        if (args.length < 4)
+        {
+            print_error(args.input[0], "Usage: writefile -o file addr [cont]");
+            return;
+        }
+        file = args.input[2];
+        addr_str = args.input[3];
+        if (args.length == 5)
+            cont_str = args.input[4];
+    }
+    else
+    {
+        file = args.input[1];
+        addr_str = args.input[2];
+        if (args.length == 4)
+            cont_str = args.input[3];
+    }
+
+    void *addr = string_to_void_pointer(addr_str);
+    if (!addr)
+        return;
+
+    size_t cont = (size_t)-1;
+    if (cont_str)
+        cont = (size_t)atoll(cont_str);
+
+    int mode = overwrite
+               ? (O_WRONLY | O_TRUNC | O_CREAT)
+               : (O_WRONLY | O_CREAT | O_EXCL);
+
+    ssize_t n = do_writefile(file, addr, cont, mode);
+
+    if (n == -1)
+        print_system_error(args.input[0]);
+    else
+        printf("written %lld bytes of %s from %p\n",
+               (long long)n, file, addr);
+}
+
+ ssize_t read_open_file(int fd, void *addr, size_t cont, t_list_file files)
+{
+    t_pos_file p = find_item_file(fd, files);
+    if (p == FNULL)
+        return -2;
+
+    struct stat st;
+    t_item_file f = get_item_file(p, files);
+
+    if (stat(f.file_name, &st) == -1)
+        return -1;
+
+    if (cont == (size_t)-1)
+      cont = 0;
+
+    return read(fd, addr, cont);
+}
+
+void cmd_read(type_args args, t_lists *lists)
+{
+    if (args.length != 4)
+    {
+        print_error(args.input[0], "Usage: read df addr cont");
+        return;
+    }
+
+    int fd = atoi(args.input[1]);
+    void *addr = string_to_void_pointer(args.input[2]);
+    size_t cont = (size_t)atoll(args.input[3]);
+
+    ssize_t n = read_open_file(fd, addr, cont, lists->files);
+
+    if (n == -2)
+        print_error(args.input[0], "Invalid fd");
+    else if (n == -1)
+        print_system_error(args.input[0]);
+    else
+        printf("read %lld bytes from fd %d into %p\n", (long long)n, fd, addr);
+}
+
+ssize_t write_open_file(int fd, void *addr, size_t cont, t_list_file files)
+{
+    t_pos_file pos = find_item_file(fd, files);
+    if (pos == FNULL)
+        return -2;
+
+    if (cont == (size_t)-1)
+        cont = 0;
+
+    return write(fd, addr, cont);
+}
+
+void cmd_write(type_args args, t_lists *lists)
+{
+
+    if (args.length != 4)
+    {
+        print_error(args.input[0], "Usage: write df addr cont");
+        return;
+    }
+
+    int fd;
+    if (!string_to_int(args.input[1], &fd))
+    {
+        print_error(args.input[0], "Invalid fd");
+        return;
+    }
+
+    void *addr = string_to_void_pointer(args.input[2]);
+    if (!addr)
+        return;
+
+    size_t cont = (size_t)atoll(args.input[3]);
+
+    ssize_t n = write_open_file(fd, addr, cont, lists->files);
+
+    if (n == -2)
+        print_error(args.input[0], "Invalid fd");
+    else if (n == -1)
+        print_system_error(args.input[0]);
+    else
+        printf("written %lld bytes to descriptor %d from %p\n",
+               (long long)n, fd, addr);
+}
+
+
+
+void recurse_internal(int n){
+    char autoArray[1024];
+    static char staticArray[1024];
+
+    printf("param:%3d(%p) array (%p), arr static (%p)\n",
+           n, (void *)&n, (void *)autoArray, (void *)staticArray);
+
+    if (n > 0)
+        recurse_internal(n - 1);
+}
+
+void cmd_recurse(type_args args, t_lists *lists)
+{
+    UNUSED(lists);
+
+    if (args.length != 2)
+    {
+        print_error(args.input[0], "Usage: recurse n");
+        return;
+    }
+
+    int n;
+    if (!string_to_int(args.input[1], &n))
+    {
+        print_error(args.input[0], "Invalid argument");
+        return;
+    }
+
+    if (n < 0)
+    {
+        print_error(args.input[0], "n must be non-negative");
+        return;
+    }
+
+    recurse_internal(n);
 }
