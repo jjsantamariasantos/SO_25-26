@@ -7,9 +7,6 @@ date: October 2025
 #define COMANNDS_H
 
 #include "types.h"
-#include "historic_list.h"
-#include "file_list.h"
-#include "mem_list.h"
 #include "auxiliar.h"
 
 //*P0 commands
@@ -53,5 +50,21 @@ void cmd_read(type_args args, t_lists *lists);
 void cmd_write(type_args args, t_lists *lists);
 void cmd_recurse(type_args args, t_lists *lists);
 //*end of P2 commands
+
+//*P3 commands
+
+void search_path(t_list_path *L);
+void parse_progspec(type_args *args, int start, t_progspec *pg);
+void execute_progspec(t_progspec *pg, t_lists *lists);
+
+void cmd_uid(type_args args, t_lists *lists);
+void cmd_envvar(type_args args, t_lists *lists);
+void cmd_showenv(type_args args, t_lists *lists);
+void cmd_fork(type_args args, t_lists *lists);
+void cmd_exec(type_args args, t_lists *lists);
+void cmd_jobs(type_args args, t_lists *lists);
+void cmd_deljobs(type_args args, t_lists *lists);
+void cmd_execute_external(type_args *args, t_lists *lists);
+//*end of P3 commands
 
 #endif /*COMANNDS_H*/

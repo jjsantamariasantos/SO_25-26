@@ -29,10 +29,18 @@ date: October 2025
 #define HNULL NULL
 #define FNULL NULL
 #define MNULL NULL
+#define BNULL NULL
+#define PNULL NULL
 #define M_MALLOC (1 << 0)
 #define M_MMAP   (1 << 1)
 #define M_SHARED (1 << 2)
 #define M_ALL    (M_MALLOC | M_MMAP | M_SHARED)
+#define S_ACTIVE   (1 << 0)  // 0001 (1)
+#define S_FINISHED (1 << 1)  // 0010 (2)
+#define S_SIGNALED (1 << 2)  // 0100 (4)
+#define S_STOPPED  (1 << 4)  // 1000 (8)
+#define S_ACTIVE_STOPED (S_ACTIVE | S_STOPPED) // 1100 (12)
+
 //*end of macros for lists used in the shell
 
 //* macros for authors command
@@ -190,6 +198,34 @@ Shows the output of the command pmap for the shell process (vmmap en macos)."
 #define SHORT_HELP_RECURSE "recurse [n]"
 #define LONG_HELP_RECURSE  "Executes the recursive function n times. This funcion has an automatic array of size 1024, \
 a static array of size 1024 and prints the addresses of both arrays and its parameter (as well as the number of recursion) before calling itself."
+#define SHORT_HELP_UID "uid [-set | -get [-l] [id]]"
+#define LONG_HELP_UID "Accede a las credenciales del proceso que ejecuta el shell.\n\
+	-get: muestra las credenciales.\n\
+	-set [id]: establece la credencial al valor numerico id.\n\
+	-set [-l] [id]: establece la credencial a login id."
+#define SHORT_HELP_ENVVAR "envvar [-show|-change|-subs]..."
+#define LONG_HELP_ENVVAR "Muestra, cambia o substituye variables de entorno.\n\
+	-show var:Muestra el valor y las direcciones de la variable de entorno var.\n\
+	-change [-a|-e|-p] [var] [val]: Cambia el valor de var a val.\n\
+	-subs [-a|-e] [var1] [var2] [val]: Sustituye var1 por var2 con valor val.\n\
+		-a indica acceso por tercer arg de main.\n\
+		-e indica acceso por environ.\n\
+		-p indica acceso por putenv."
+#define SHORT_HELP_SHOWENV "showenv [-environ|-addr] "
+#define LONG_HELP_SHOWENV "Muestra el entorno del proceso.\n\
+	-environ: accede usando environ (en lugar del tercer arg de main)\n\
+	-addr: muestra el valor y donde se almacenan environ y el 3er arg main ."
+#define SHORT_HELP_FORK "fork"
+#define LONG_HELP_FORK "El shell hace fork y queda en espera a que su hijo termine."
+#define SHORT_HELP_EXEC "exec [VAR1] [VAR2] ... [prog] [args] ... [@pri] [&]"
+#define LONG_HELP_EXEC "Ejecuta, sin crear proceso,prog con argumentos\n\
+	en un entorno que contiene solo las variables VAR1, VAR2..."
+#define SHORT_HELP_JOBS "jobs"
+#define LONG_HELP_JOBS " Lista los procesos en segundo plano."
+#define SHORT_HELP_DELJOBS "deljobs[-term] [-sig]"
+#define LONG_HELP_DELJOBS "Elimina los procesos de la lista procesos en sp.\n\
+	-term: los terminados.\n\
+	-sig: los terminados por senal."
 //*end of macros for help texts
 
 #endif /* MACROS_H */

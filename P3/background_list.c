@@ -1,30 +1,30 @@
 #include "background_list.h"
 
-bool createNodeB(tPosB *p);
+bool createNodeB(t_pos_background *p);
 
-void createEmptyListB(t_list_background *L)
+void create_empty_list_background(t_list_background *L)
 {
     *L = BNULL;
 }
 
-bool isEmptyListB(t_list_background L)
+bool is_empty_list_background(t_list_background L)
 {
     return L == BNULL;
 }
 
-tPosB firstB(t_list_background L)
+t_pos_background first_background(t_list_background L)
 {
     return L;
 }
 
-tPosB lastB(t_list_background L)
+t_pos_background last_background(t_list_background L)
 {
     return L->prev;
 }
 
-tPosB previousB(tPosB p, t_list_background L)
+t_pos_background previous_background(t_pos_background p, t_list_background L)
 {
-    if (p->prev == lastB(L))
+    if (p->prev == last_background(L))
     {
         return BNULL;
     }
@@ -32,15 +32,15 @@ tPosB previousB(tPosB p, t_list_background L)
         return p->prev;
 }
 
-tPosB nextB(tPosB p, t_list_background L)
+t_pos_background next_background(t_pos_background p, t_list_background L)
 {
     UNUSED(L);
     return p->next;
 }
 
-bool insertItemB(tItemB d, tPosB p, t_list_background *L)
+bool insert_item_background(t_item_background d, t_pos_background p, t_list_background *L)
 {
-    tPosB q;
+    t_pos_background q;
 
     if (!createNodeB(&q))
         return false;
@@ -49,30 +49,30 @@ bool insertItemB(tItemB d, tPosB p, t_list_background *L)
     q->next = BNULL;
     q->prev = BNULL;
 
-    if (isEmptyListB(*L)) // Empty list
+    if (is_empty_list_background(*L)) 
     {
-        *L = q; // The first node its q
+        *L = q; 
         q->prev = q;
     }
-    else if (p == BNULL) // Insert at the end
+    else if (p == BNULL) 
     {
-        tPosB r;
+        t_pos_background r;
 
-        r = (*L)->prev; // (*L)->prev is the last node
+        r = (*L)->prev; 
         r->next = q;
         q->prev = r;
         (*L)->prev = q;
     }
-    else if (p == *L) // Insert at first position
+    else if (p == *L) 
     {
         q->next = *L;
-        q->prev = (*L)->prev; // (*L)->prev point to last node
+        q->prev = (*L)->prev; 
         (*L)->prev = q;
         *L = q;
     }
-    else // Insert in the middle
+    else 
     {
-        // Pointers are reassigned
+       
         q->next = p;
         q->prev = p->prev;
         p->prev->next = q;
@@ -81,11 +81,11 @@ bool insertItemB(tItemB d, tPosB p, t_list_background *L)
     return true;
 }
 
-void deleteAtPositionB(tPosB p, t_list_background *L)
+void delete_at_position_background(t_pos_background p, t_list_background *L)
 {
-    tPosB q;
+    t_pos_background q;
 
-    if (p == *L) // p is the first node
+    if (p == *L) 
     {
         if (p->next == BNULL)
         {
@@ -93,43 +93,42 @@ void deleteAtPositionB(tPosB p, t_list_background *L)
         }
         else
         {
-            *L = p->next;         // point the list to second node
-            (*L)->prev = p->prev; // p->prev point to last node
+            *L = p->next;         
+            (*L)->prev = p->prev; 
         }
     }
-    else if (p->next == BNULL) // p is the last node
+    else if (p->next == BNULL) 
     {
         q = p->prev;
         (*L)->prev = q;
         q->next = BNULL;
     }
-    else // p is in the middle
+    else 
     {
         q = p->next;
         p->prev->next = q;
         q->prev = p->prev;
     }
 
-    // Free memory
     free(p);
 }
 
-tItemB getItemB(tPosB p, t_list_background L)
+t_item_background get_item_background(t_pos_background p, t_list_background L)
 {
     UNUSED(L);
     return (p->data);
 }
 
-bool createNodeB(tPosB *p)
+bool createNodeB(t_pos_background *p)
 {
-    *p = malloc(sizeof(struct tNodeB));
+    *p = malloc(sizeof(struct t_node_background));
     if (*p == BNULL)
         return false;
     else
         return true;
 }
 
-void updateItemB(tItemB d, tPosB p, t_list_background* L)
+void update_item_background(t_item_background d, t_pos_background p, t_list_background* L)
 {
     UNUSED(L);
     p->data=d;

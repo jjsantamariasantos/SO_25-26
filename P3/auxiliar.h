@@ -9,8 +9,10 @@ date: October 2025
 #include "types.h"
 #include "historic_list.h"
 #include "file_list.h"
+#include "mem_list.h"
+#include "background_list.h"
+#include "path_list.h"
 #include "commands.h"
-
 
 void print_prompt();
 bool read_input(t_lists *L);
@@ -29,4 +31,7 @@ void print_file_error(char *name, char *file);
 bool string_to_long(char *string, long *result);
 void free_mem_list(t_list_mem *list);
 void free_lists(t_lists *L);
+void free_background_list(t_list_background *list);
+void free_path_list(t_list_path *list);
+
 #endif /*AUXILIAR_H*/

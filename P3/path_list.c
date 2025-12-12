@@ -78,4 +78,57 @@ bool insert_item_path(t_item_path d, t_pos_path p, t_list_path *L)
     return true;
 }
 
+void delete_at_position_path(t_pos_path p, t_list_path *L)
+{
+    t_pos_path node;
 
+    if(p == *L){
+        if(p->next == PNULL){
+            *L = PNULL;
+        } else {
+            *L = p->next;
+            (*L)->prev = p->prev;
+        }
+    } else if (p->next == PNULL)
+    {
+        node = p->prev;
+        (*L)->prev = node;
+        node->next = PNULL;
+    }
+    else
+    {
+        node = p->prev;
+        p->prev->next = node;
+        node->prev = p->prev;
+    }
+    free(p);
+}
+
+t_item_path get_item_path(t_pos_path p, t_list_path L)
+{
+    UNUSED(L);
+    return p->item;
+}
+
+bool create_node_path(t_pos_path *new_node)
+{
+    *new_node = malloc(sizeof(struct t_node_path));
+    if (*new_node == PNULL)
+        return false;
+    return true;
+}
+
+t_pos_path find_item_path(char *path, t_list_path L)
+{
+    if(is_empty_list_path(L))
+        return PNULL;
+    
+    t_pos_path pos = L;
+
+    while(pos != PNULL){
+        if(strcmp(pos->item, path) == 0)
+            return pos;
+        pos = pos->next;
+    }
+    return PNULL;
+}

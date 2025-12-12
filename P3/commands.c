@@ -5,9 +5,103 @@ date: October 2025
 
 #include "commands.h"
 
+
 #define ACTIVE 
 
 extern char **environ;
+struct SIN 
+{
+    char *name;
+    int num;
+};
+
+static struct SIN sigstrnum[] = 
+{   
+	{"HUP", SIGHUP},
+	{"INT", SIGINT},
+	{"QUIT", SIGQUIT},
+	{"ILL", SIGILL}, 
+	{"TRAP", SIGTRAP},
+	{"ABRT", SIGABRT},
+	{"IOT", SIGIOT},
+	{"BUS", SIGBUS},
+	{"FPE", SIGFPE},
+	{"KILL", SIGKILL},
+	{"USR1", SIGUSR1},
+	{"SEGV", SIGSEGV},
+	{"USR2", SIGUSR2}, 
+	{"PIPE", SIGPIPE},
+	{"ALRM", SIGALRM},
+	{"TERM", SIGTERM},
+	{"CHLD", SIGCHLD},
+	{"CONT", SIGCONT},
+	{"STOP", SIGSTOP},
+	{"TSTP", SIGTSTP}, 
+	{"TTIN", SIGTTIN},
+	{"TTOU", SIGTTOU},
+	{"URG", SIGURG},
+	{"XCPU", SIGXCPU},
+	{"XFSZ", SIGXFSZ},
+	{"VTALRM", SIGVTALRM},
+	{"PROF", SIGPROF},
+	{"WINCH", SIGWINCH}, 
+	{"IO", SIGIO},
+	{"SYS", SIGSYS},
+#ifdef SIGPOLL
+	{"POLL", SIGPOLL},
+#endif
+#ifdef SIGPWR
+	{"PWR", SIGPWR},
+#endif
+#ifdef SIGEMT
+	{"EMT", SIGEMT},
+#endif
+#ifdef SIGINFO
+	{"INFO", SIGINFO},
+#endif
+#ifdef SIGSTKFLT
+	{"STKFLT", SIGSTKFLT},
+#endif
+#ifdef SIGCLD
+	{"CLD", SIGCLD},
+#endif
+#ifdef SIGLOST
+	{"LOST", SIGLOST},
+#endif
+#ifdef SIGCANCEL
+	{"CANCEL", SIGCANCEL},
+#endif
+#ifdef SIGTHAW
+	{"THAW", SIGTHAW},
+#endif
+#ifdef SIGFREEZE
+	{"FREEZE", SIGFREEZE},
+#endif
+#ifdef SIGLWP
+	{"LWP", SIGLWP},
+#endif
+#ifdef SIGWAITING
+	{"WAITING", SIGWAITING},
+#endif
+ 	{NULL,-1},
+};
+
+
+int get_num_sin(char *sin) 
+{ 
+    for (int i = 0; sigstrnum[i].name != NULL; i++)
+        if (!strcmp(sin, sigstrnum[i].name))
+            return sigstrnum[i].num;
+    return -1;
+}
+
+char *get_name_sin(int sin)
+{
+    for (int i = 0; sigstrnum[i].name != NULL; i++)
+        if (sin == sigstrnum[i].num)
+            return sigstrnum[i].name;
+    return ("SIGUNKNOWN");
+    }
 
 //*auxiliary functions for commands
 
@@ -26,6 +120,7 @@ void print_mem_list_title(unsigned char type);
 void print_time(time_t time);
 void *string_to_void_pointer(char *str);
 void print_env(char *envp[], bool environ);
+void update_job_status(t_pos_background p, t_list_background *list);
 //*end of multiple commands auxiliary functions
 
 //* authors auxiliary functions
@@ -157,7 +252,7 @@ void set_uid_login(type_args args);
 //*end of uid auxiliary functions
 
 //*envvar auxiliary functions
-int print_var(type_args args, char *var);
+void print_var(type_args args, char *var);
 int do_change_var(char *var, char *value, char *env[], t_list_mem *L);
 int search_var(char *var, char *env[]);
 int do_put_env(char *var, char *value, t_list_mem *L);
@@ -2410,6 +2505,78 @@ void cmd_recurse(type_args args, t_lists *lists)
 /****************************************************
  *                FUNCIONES P3                      *
  ****************************************************/
+void search_path(t_list_path *L)
+{
+    char *path_env = getenv("PATH");
+
+    if(!path_env){
+        print_error("get_env","cannot find PATH");
+        return;
+    }
+    char *path_copy = strdup(path_env);
+    char *token = strtok(path_copy, ":");
+    int i = 0;
+
+    while(token != NULL){
+        insert_item_path(strdup(token), PNULL, L);
+        token = strtok(NULL,":");
+        i++;
+    }
+
+    printf("Imported \033[33m%d\033[0m paths from \033[34mPATH\033[0m\n", i);
+    free(path_copy);
+}
+
+void parse_progspec(type_args *args, int start, t_progspec *pg){
+    pg->prio = -1;
+    pg->background = false;
+
+    if(args->length > start && strcmp(args->input[args->length - 1], "&") == 0){
+        pg->background = true;
+        args->input[--args->length] = NULL;
+    }
+
+    if(args->length > start && args->input[args->length - 1][0] == '@'){
+        if(!string_to_int(args->input[args->length - 1] + 1, &pg->prio)){
+            print_error(args->input[0], "Invalid priority");
+            pg->prio = -1;
+        }
+        args->input[--args->length] = NULL;
+    }
+    pg->argv = args->input +start;
+}
+void execute_progspec(t_progspec *pg, t_lists *lists){
+    pid_t pid = fork();
+
+    if(pid == 0){
+        if(pg->prio != -1)
+            setpriority(PRIO_PROCESS, 0, pg->prio);
+        execvp(pg->argv[0], pg->argv);
+        print_system_error(pg->argv[0]);
+        exit(1);
+    }
+
+    if(pg->background){
+        t_item_background item;
+        item.pid = pid;
+        item.time = time(NULL);
+        item.status = S_ACTIVE;
+        item.sin = 0;
+
+        item.command_line[0] = '\0';
+        for(int i = 0; pg->argv[i] != NULL; i++){
+            if(i>0)strcat(item.command_line, " ");
+            strcat(item.command_line, pg->argv[i]);
+        }
+
+        insert_item_background(item, BNULL, &lists->background);
+        printf("%d] %s\n", pid, item.command_line);
+
+    } else{
+        waitpid(pid, NULL, 0);
+    }
+    
+}
 
 void print_env(char *envp[], bool environ){
     int i=0;
@@ -2417,6 +2584,37 @@ void print_env(char *envp[], bool environ){
         printf("\033[32m%p\033[0m-> %s [\033[33m%d\033[0m]=(\033[32m%p\033[0m) \033[34m%s\n\033[0m", env, (environ)? "environ":"main arg3", i, *env, *env);
         i++;
     }
+}
+
+void update_job_status(t_pos_background p, t_list_background *list)
+{
+    t_item_background item = get_item_background(p, *list);
+    int status;
+
+    pid_t r = waitpid(item.pid, &status,
+                      WNOHANG | WUNTRACED | WCONTINUED);
+
+    if (r <= 0)
+        return;
+
+    if (WIFEXITED(status)) {
+        item.status = S_FINISHED;
+        item.sin = WEXITSTATUS(status);
+    }
+    else if (WIFSIGNALED(status)) {
+        item.status = S_SIGNALED;
+        item.sin = WTERMSIG(status);
+    }
+    else if (WIFSTOPPED(status)) {
+        item.status = S_STOPPED;
+        item.sin = WSTOPSIG(status);
+    }
+    else if (WIFCONTINUED(status)) {
+        item.status = S_ACTIVE;
+        item.sin = 0;
+    }
+
+    update_item_background(item, p, list);
 }
 
 void get_uid(){
@@ -2488,7 +2686,7 @@ void cmd_uid(type_args args, t_lists *lists){
     }
 }
 
-int print_var(type_args args, char *var){
+void print_var(type_args args, char *var){
     char **envp = args.args_main.envp;
     size_t var_len = strlen(var);
     void *entry_address = NULL;
@@ -2523,7 +2721,7 @@ int print_var(type_args args, char *var){
     value = getenv(var);
 
     if(value != NULL){
-        print("  with getenv; %s=\033[34m%s\033[0m\n(\033[32m%p\033[0m)\n", var, value);
+        printf("  with getenv: \033[34m%s\033[0m\n(\033[32m%p\033[0m)\n", var, value);
     }
 }
 
@@ -2648,7 +2846,7 @@ void cmd_envvar(type_args args, t_lists *lists){
         return;
     }
 
-    if((args.length == 3) && ((args.input[1], "-show") == 0)){
+    if((args.length == 3) && (strcmp(args.input[1], "-show") == 0)){
         print_var(args, args.input[2]);
         return;
     }
@@ -2664,7 +2862,7 @@ void cmd_envvar(type_args args, t_lists *lists){
                 print_system_error(args.input[0]);
             return;
         } else if(args.input[1][1] == 'p'){
-            if(do_put_var(args.input[2], args.input[3], &lists->memory) == -1)
+            if(do_put_env(args.input[2], args.input[3], &lists->memory) == -1)
                 print_system_error(args.input[0]);
             return;
         }
@@ -2717,4 +2915,103 @@ void cmd_showenv(type_args args, t_lists *lists){
         print_error(args.input[0], "Invalid number of arguments");
         break;
     }
+}
+
+void cmd_fork(type_args args, t_lists *lists){
+    UNUSED(lists);
+
+    if (args.length != 1) {
+        print_error(args.input[0], "Not accept arguments");
+        return;
+    }
+
+    pid_t pid = fork();
+
+    if (pid == 0) {
+        printf("Child running with PID %d\n", getpid());
+        exit(0);
+    }
+    else if (pid > 0) {
+        waitpid(pid, NULL, 0);
+    }
+    else {
+        perror("fork");
+    }
+}
+
+void cmd_exec(type_args args, t_lists *lists){
+
+    UNUSED(lists);
+
+    t_progspec pg;
+    parse_progspec(&args, 1, &pg);
+
+    if (pg.prio != -1)
+        setpriority(PRIO_PROCESS, 0, pg.prio);
+
+    execvp(pg.argv[0], pg.argv);
+    perror(pg.argv[0]);
+}
+
+void cmd_jobs(type_args args, t_lists *lists){
+    UNUSED(args);
+
+    for (t_pos_background p = first_background(lists->background);
+        p != BNULL;
+        p = next_background(p, lists->background))
+    {
+        update_job_status(p, &lists->background);
+        t_item_background item = get_item_background(p, lists->background);
+
+        printf("%6d ", item.pid);
+
+        if (item.status == S_ACTIVE)
+            printf("ACTIVE ");
+        else if (item.status == S_FINISHED)
+            printf("FINISHED ");
+        else if (item.status == S_SIGNALED)
+            printf("SIGNALED ");
+        else if (item.status == S_STOPPED)
+            printf("STOPPED ");
+
+        printf("(%d) %s\n", item.sin, item.command_line);
+    }
+}
+
+void cmd_deljobs(type_args args, t_lists *lists){
+    if (args.length != 2) {
+        print_error(args.input[0], "Usage: deljobs -term|-sig");
+        return;
+    }
+
+    bool delTerm = strcmp(args.input[1], "-term") == 0;
+    bool delSig  = strcmp(args.input[1], "-sig") == 0;
+
+    if (!delTerm && !delSig) {
+        print_error(args.input[0], "Usage: deljobs -term|-sig");
+        return;
+    }
+
+    t_pos_background p = first_background(lists->background);
+
+    while (p != BNULL) {
+        t_pos_background next = next_background(p, lists->background);
+
+        update_job_status(p, &lists->background);
+        t_item_background item = get_item_background(p, lists->background);
+
+        if ((delTerm && item.status == S_FINISHED) ||
+            (delSig  && item.status == S_SIGNALED))
+        {
+            delete_at_position_background(p, &lists->background);
+        }
+
+        p = next;
+    }
+}
+
+void cmd_execute_external(type_args *args, t_lists *lists){
+    t_progspec pg;
+    parse_progspec(args, 0, &pg);
+    execute_progspec(&pg, lists);
 }

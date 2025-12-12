@@ -39,6 +39,13 @@ t_command commands[] =
         {"read", cmd_read, SHORT_HELP_READ, LONG_HELP_READ},
         {"write", cmd_write, SHORT_HELP_WRITE, LONG_HELP_WRITE},
         {"recurse", cmd_recurse, SHORT_HELP_RECURSE, LONG_HELP_RECURSE},
+        {"uid", cmd_uid, SHORT_HELP_UID, LONG_HELP_UID},
+        {"envvar", cmd_envvar, SHORT_HELP_ENVVAR, LONG_HELP_ENVVAR},
+        {"showenv", cmd_showenv, SHORT_HELP_SHOWENV, LONG_HELP_SHOWENV},
+        {"fork", cmd_fork, SHORT_HELP_FORK, LONG_HELP_FORK},
+        {"exec", cmd_exec, SHORT_HELP_EXEC, LONG_HELP_EXEC},
+        {"jobs", cmd_jobs, SHORT_HELP_JOBS, LONG_HELP_JOBS},
+        {"deljobs", cmd_deljobs, SHORT_HELP_DELJOBS, LONG_HELP_DELJOBS},
         {NULL, NULL, NULL, NULL}
     };
         
@@ -108,7 +115,8 @@ int cut_input(char *input, char *args[])
 }
 
 void select_command(type_args args, char *input, t_lists *L, bool *exit_shell)
-{
+{   
+    UNUSED(input);
     const int n_commands = get_commands_length();
 
     if (args.length > 0)
@@ -126,7 +134,7 @@ void select_command(type_args args, char *input, t_lists *L, bool *exit_shell)
                 return;
             }
         }
-        print_error(input, "Command not found");
+        cmd_execute_external(&args, L);
     }
 }
 
@@ -159,7 +167,7 @@ void print_error(char *name, char *msg)
 
 void print_system_error(char *name)
 {
-    fprintf(stderr, "Error: %s: %s\n", name, strerror(errno));
+    fprintf(stderr, "Error: %s: %s\n",(name) ? name:"NULL", strerror(errno));
 }
 
 int get_commands_length()
@@ -295,4 +303,24 @@ void free_lists(t_lists *L){
     free_file_list(&L->files);
     free_historic_list(&L->historic);
     free_mem_list(&L->memory);
+    free_background_list(&L->background);
+    free_path_list(&L->path);
+}
+
+void free_background_list(t_list_background *list){
+    t_pos_background p;
+
+    while (!is_empty_list_background(*list)) {
+        p = last_background(*list);
+        delete_at_position_background(p, list);
+    }
+}
+
+void free_path_list(t_list_path *list){
+    t_pos_path p; 
+    while (!is_empty_list_path(*list)) {
+        p = last_path(*list);
+        free(get_item_path(p, *list));
+        delete_at_position_path(p, list);
+    }
 }
