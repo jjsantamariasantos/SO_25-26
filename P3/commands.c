@@ -2932,6 +2932,10 @@ void cmd_exec(type_args args, t_lists *lists){
     if(pg.argv ==NULL){
         return;
     }
+    if(pg.background){
+        execute_progspec(&pg, lists);
+        return;
+    }
     if (pg.prio != -1)
         setpriority(PRIO_PROCESS, 0, pg.prio);
 
