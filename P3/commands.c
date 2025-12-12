@@ -5,6 +5,10 @@ date: October 2025
 
 #include "commands.h"
 
+#define ACTIVE 
+
+extern char **environ;
+
 //*auxiliary functions for commands
 
 //*multiple commands auxiliary functions
@@ -21,6 +25,7 @@ void print_mem_list(t_list_mem list, unsigned char type);
 void print_mem_list_title(unsigned char type);
 void print_time(time_t time);
 void *string_to_void_pointer(char *str);
+void print_env(char *envp[], bool environ);
 //*end of multiple commands auxiliary functions
 
 //* authors auxiliary functions
@@ -98,6 +103,7 @@ void free_malloc(type_args args, t_list_mem *list);
 void *map_file(char *file, int protection, type_args args, t_lists *L);
 void mmap_aux(type_args args, t_lists *L);
 void free_mmap(type_args args, t_lists *L);
+
 //*end of mmap auxiliary functions
 void *get_mem_shmget(key_t key, size_t size, type_args args, t_list_mem *list);
 void create_shared_aux(type_args args, t_list_mem *list);
@@ -142,7 +148,37 @@ ssize_t write_open_file(int fd, void *addr, size_t cont, t_list_file files);
 
 //*recurse auxiliary functions
 void recurse_internal(int n);
-///*end of write auxiliary functions
+//*end of recurse auxiliary functions
+
+//*uid auxiliary functions
+void get_uid();
+void set_uid_int(int n);
+void set_uid_login(type_args args);
+//*end of uid auxiliary functions
+
+//*envvar auxiliary functions
+int print_var(type_args args, char *var);
+int do_change_var(char *var, char *value, char *env[], t_list_mem *L);
+int search_var(char *var, char *env[]);
+int do_put_env(char *var, char *value, t_list_mem *L);
+int do_subs_vars(char *var1, char *var2,char *value,  char *env[], t_list_mem *L);
+//*end of envvar auxiliary functions
+
+//*showenv auxiliary functions
+void do_environ_addr(type_args args);
+//*end of showenv auxiliary functions
+
+//*fork auxiliary functions
+//*end of fork auxiliary functions
+
+//*exec auxiliary functions
+//*end of exec auciliary functions
+
+//*jobs auxiliary functions
+//*end of jobs auxiliary functions
+
+//*deljobs auxiliary functions
+//*end of deljobs auxiliary functions
 
 //*end of auxiliary functions for commands
 
@@ -2368,4 +2404,317 @@ void cmd_recurse(type_args args, t_lists *lists)
     }
 
     recurse_internal(n);
+}
+
+
+/****************************************************
+ *                FUNCIONES P3                      *
+ ****************************************************/
+
+void print_env(char *envp[], bool environ){
+    int i=0;
+    for(char **env = envp; *env != NULL; env++){
+        printf("\033[32m%p\033[0m-> %s [\033[33m%d\033[0m]=(\033[32m%p\033[0m) \033[34m%s\n\033[0m", env, (environ)? "environ":"main arg3", i, *env, *env);
+        i++;
+    }
+}
+
+void get_uid(){
+    uid_t real_uid = getuid();
+    uid_t effective_uid = geteuid();
+    struct passwd *pw = getpwuid(real_uid);
+
+    printf("Real UID: \033[33m%d\033[0m, ( \033[34m%s \033[0m)\n", real_uid, pw ? pw->pw_name : "unknown");
+
+    pw = getpwuid(effective_uid);
+    printf("Effective UID: \033[33m%d\033[0m, ( \033[34m%s \033[0m)\n", effective_uid, pw ? pw->pw_name : "unknown");
+}
+
+void set_uid_int(int n){
+    printf("%d", n);
+    if (seteuid((uid_t)n) == -1) 
+        print_system_error("Can not change uid");
+}
+
+void set_uid_login(type_args args){
+     char *login = args.input[2]; struct passwd *pw = getpwnam(login);
+    
+    if (pw == NULL)
+    {
+        print_error(args.input[0], "User not found");
+        return;
+    }
+
+    set_uid_int(pw->pw_uid);
+}
+
+void cmd_uid(type_args args, t_lists *lists){
+    UNUSED(lists);
+
+    switch (args.length)
+    {
+    case 1:
+        get_uid();
+        break;
+    case 2:
+        if(strcmp(args.input[1], "-get") == 0)
+            get_uid();
+        else
+            print_error(args.input[0], "Invalid argument");
+        
+        break;
+    case 3:
+        if((strcmp(args.input[1], "-set") == 0) && (strcmp(args.input[2], "-l") != 0)){
+            int n;
+            if(!string_to_int(args.input[2], &n)){
+                print_error(args.input[0], "Invalid uid");
+                return;
+            }
+            set_uid_int(n);
+        } else{
+            print_error(args.input[0], "Invalid argument");
+        }
+        break;
+    case 4:
+        if((strcmp(args.input[1], "-set") == 0) && (strcmp(args.input[2], "-l") == 0)){
+            set_uid_login(args);
+        } else{
+            print_error(args.input[0], "Invalid argument");
+        }
+        break;
+    default:
+        print_error(args.input[0], "Invalid num of arguments");
+        break;
+    }
+}
+
+int print_var(type_args args, char *var){
+    char **envp = args.args_main.envp;
+    size_t var_len = strlen(var);
+    void *entry_address = NULL;
+    void *dir_name= NULL;
+    char *value = NULL;
+
+    for(char **env = envp; *env != NULL; env++){
+        if(strncmp(*env, var, var_len) == 0 && (*env)[var_len] == '='){
+            entry_address = env;
+            dir_name = *env;
+            value = *env + var_len + 1; // +1 for =
+            break;
+        }
+    }
+
+    if(entry_address != NULL)
+        printf("with arg3 main; %s=\033[34m%s\033[0m(\033[32m%p\033[0m) @\033[32m%p\33[0m\n", var, value, dir_name, entry_address);
+    
+    entry_address = NULL; dir_name = NULL; value = NULL;
+    for(char **env = environ; *env != NULL; env++){
+        if(strncmp(*env, var, var_len) == 0 && (*env)[var_len] == '='){
+            entry_address = env;
+            dir_name = *env;
+            value = *env + var_len + 1; // +1 for =
+            break;
+        }
+    }
+    
+    if(entry_address != NULL)
+        printf(" with environ; %s=\033[34m%s\033[0m(\033[32m%p\033[0m) @\033[32m%p\33[0m\n", var, value, dir_name, entry_address);
+    
+    value = getenv(var);
+
+    if(value != NULL){
+        print("  with getenv; %s=\033[34m%s\033[0m\n(\033[32m%p\033[0m)\n", var, value);
+    }
+}
+
+int do_change_var(char *var, char *value, char *env[], t_list_mem *L){
+    int pos;
+    char *aux;
+
+    if((pos = search_var(var, env)) == -1){
+        return -1;
+    }
+
+    if((aux = (char *)malloc(strlen(var) + strlen(value) + 2)) == NULL){
+        return -1;
+    }
+
+    //! Do not free aux because environment directly uses this pointer   
+    //! add to memoryList to free at end
+    t_item_mem item;
+    time_t now;
+    time(&now);
+    item.addr = aux;
+    item.date = now;
+    item.type = M_MALLOC;
+    item.size = sizeof(aux);
+
+    insert_item_mem(item, MNULL, L);
+
+    //change env
+    strcpy(aux, var);
+    strcat(aux, "=");
+    strcat(aux, value);
+
+    env[pos] = aux;
+    return pos;
+}
+
+int search_var(char *var, char *env[]){
+    int pos = 0;
+    char *aux = malloc(sizeof(var) + 2);
+
+    strcpy(aux, var);
+    strcat(aux, "=");
+    
+    while(env[pos] != NULL){
+        if(!strncmp(env[pos], aux, strlen(aux))){
+            free(aux);
+            return pos;
+        }else
+            pos++;
+    }
+    free(aux);
+    errno = ENOENT;
+    return -1;
+}
+
+int do_put_env(char *var, char *value, t_list_mem *L){
+    size_t len = strlen(var) + strlen(value) + 2;
+    char *env_var = malloc(len);
+
+    if(!env_var){
+        return -1;
+    }
+
+    //! Do not free env_var because environment directly uses this pointer   
+    //! add to memoryList to free at end
+
+    t_item_mem item;
+    time_t now;
+    time(&now);
+    item.addr = env_var;
+    item.date = now;
+    item.type = M_MALLOC;
+    item.size = sizeof(env_var);
+
+    insert_item_mem(item, MNULL, L);
+    snprintf(env_var, len, "%s=%s", var, value);
+
+    if(putenv(env_var) != 0){ //* Change var
+        free(env_var);
+        return -1;
+    }
+
+    return 0;
+}
+
+int do_subs_vars(char *var1, char *var2,char *value,  char *env[], t_list_mem *L){
+    int pos;
+    char *aux;
+
+    if((pos = search_var(var1, env)) == -1)
+        return -1;
+
+    if((aux = (char *)malloc(strlen(var2) + strlen(value) + 2)) == NULL)
+        return -1;
+
+    //! Do not free aux because environment directly uses this pointer   
+    //! add to memoryList to free at end
+
+    t_item_mem item;
+    time_t now;
+    time(&now);
+    item.addr = aux;
+    item.date = now;
+    item.type = M_MALLOC;
+    item.size = sizeof(aux);
+
+    insert_item_mem(item, MNULL, L);
+
+    //change env
+    strcpy(aux, var2);
+    strcat(aux, "=");
+    strcat(aux, value);
+
+    env[pos] = aux;
+    return pos;
+}
+
+void cmd_envvar(type_args args, t_lists *lists){
+
+    if(args.length == 1){
+        print_env(environ, true);
+        return;
+    }
+
+    if((args.length == 3) && ((args.input[1], "-show") == 0)){
+        print_var(args, args.input[2]);
+        return;
+    }
+
+    if((args.length == 5) && (strcmp(args.input[1], "-change") == 0)){
+        if(args.input[1][1] == 'a'){
+            char **envp =args.args_main.envp;
+            if(do_change_var(args.input[2], args.input[3], envp, &lists->memory) == -1)
+                print_system_error(args.input[0]);
+            return;
+        } else if(args.input[1][1] == 'e'){
+            if(do_change_var(args.input[2], args.input[3], environ, &lists->memory) == -1)
+                print_system_error(args.input[0]);
+            return;
+        } else if(args.input[1][1] == 'p'){
+            if(do_put_var(args.input[2], args.input[3], &lists->memory) == -1)
+                print_system_error(args.input[0]);
+            return;
+        }
+        print_error(args.input[0], "Use envvar -change [-a|-e|-p] var val");
+        return; 
+    }
+
+    if((args.length == 6) && (strcmp(args.input[1], "-subs") == 0)){
+        if(args.input[1][1] == 'a'){
+            char **envp =args.args_main.envp;
+            if(do_subs_vars(args.input[2], args.input[3], args.input[4], envp, &lists->memory) == -1)
+                print_system_error(args.input[0]);
+            return;
+        } else if(args.input[1][1] == 'e'){
+            if(do_subs_vars(args.input[2], args.input[3], args.input[4], environ, &lists->memory) == -1)
+                print_system_error(args.input[0]);
+            return;
+        }
+        print_error(args.input[0], "Use envvar -subs [-a|-e] var1 var2 val");
+        return; 
+    }
+    for(int i = 1; i < args.length; i++)
+        print_var(args, args.input[i]);
+    return;
+}
+
+void do_environ_addr(type_args args){
+    char **envp = args.args_main.envp;
+
+    printf("environ: \033[32m%p\033[0m (stored in\033[032m%p\033[0m)\n",environ, (void *)&environ);
+    printf("main arg3: \033[32m%p\033[0m (stored in\033[032m%p\033[0m)\n",envp, (void *)&envp);
+}
+
+void cmd_showenv(type_args args, t_lists *lists){
+    UNUSED(lists);
+
+    switch (args.length)
+    {
+    case 1:
+        print_env(args.args_main.envp, false);
+        break;
+    case 2:
+        if(strcmp(args.input[1], "-addr") == 0){
+            do_environ_addr(args);
+        } else{
+            print_error(args.input[0], "Invalid argument");
+        }
+        break;
+    default:
+        print_error(args.input[0], "Invalid number of arguments");
+        break;
+    }
 }
