@@ -53,7 +53,6 @@ void cmd_recurse(type_args args, t_lists *lists);
 
 //*P3 commands
 
-void search_path(t_list_path *L);
 void parse_progspec(type_args *args, int start, t_progspec *pg);
 void execute_progspec(t_progspec *pg, t_lists *lists);
 

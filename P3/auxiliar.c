@@ -90,12 +90,11 @@ bool read_input(t_lists *L)
     return false;
 }
 
-void process_input(t_lists *L, bool *exit_shell)
+void process_input(t_lists *L, bool *exit_shell, type_args args)
 {
     if (!is_empty_list_historic(L->historic))
     {
         t_item_historic last_item = get_item_historic(last_position_historic(L->historic), L->historic);
-        type_args args;
         args.length = cut_input(last_item.command, args.input);
         select_command(args, last_item.command, L, exit_shell);
     }
@@ -304,7 +303,6 @@ void free_lists(t_lists *L){
     free_historic_list(&L->historic);
     free_mem_list(&L->memory);
     free_background_list(&L->background);
-    free_path_list(&L->path);
 }
 
 void free_background_list(t_list_background *list){
@@ -313,14 +311,5 @@ void free_background_list(t_list_background *list){
     while (!is_empty_list_background(*list)) {
         p = last_background(*list);
         delete_at_position_background(p, list);
-    }
-}
-
-void free_path_list(t_list_path *list){
-    t_pos_path p; 
-    while (!is_empty_list_path(*list)) {
-        p = last_path(*list);
-        free(get_item_path(p, *list));
-        delete_at_position_path(p, list);
     }
 }

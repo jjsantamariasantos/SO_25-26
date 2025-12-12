@@ -5,10 +5,10 @@ date: October 2025
 
 #include "commands.h"
 
-
 #define ACTIVE 
 
 extern char **environ;
+
 struct SIN 
 {
     char *name;
@@ -2505,27 +2505,6 @@ void cmd_recurse(type_args args, t_lists *lists)
 /****************************************************
  *                FUNCIONES P3                      *
  ****************************************************/
-void search_path(t_list_path *L)
-{
-    char *path_env = getenv("PATH");
-
-    if(!path_env){
-        print_error("get_env","cannot find PATH");
-        return;
-    }
-    char *path_copy = strdup(path_env);
-    char *token = strtok(path_copy, ":");
-    int i = 0;
-
-    while(token != NULL){
-        insert_item_path(strdup(token), PNULL, L);
-        token = strtok(NULL,":");
-        i++;
-    }
-
-    printf("Imported \033[33m%d\033[0m paths from \033[34mPATH\033[0m\n", i);
-    free(path_copy);
-}
 
 void parse_progspec(type_args *args, int start, t_progspec *pg){
     pg->prio = -1;
@@ -2629,9 +2608,9 @@ void get_uid(){
 }
 
 void set_uid_int(int n){
-    printf("%d", n);
+    printf("%d\n", n);
     if (seteuid((uid_t)n) == -1) 
-        print_system_error("Can not change uid");
+        print_system_error("Can not change uid\n");
 }
 
 void set_uid_login(type_args args){
@@ -2943,9 +2922,16 @@ void cmd_exec(type_args args, t_lists *lists){
 
     UNUSED(lists);
 
+    if(args.length < 2){
+        print_error(args.input[0], "Usage: exec command [args...]");
+        return;
+    }
+    
     t_progspec pg;
     parse_progspec(&args, 1, &pg);
-
+    if(pg.argv ==NULL){
+        return;
+    }
     if (pg.prio != -1)
         setpriority(PRIO_PROCESS, 0, pg.prio);
 

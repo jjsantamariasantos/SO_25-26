@@ -30,7 +30,6 @@ date: October 2025
 #define FNULL NULL
 #define MNULL NULL
 #define BNULL NULL
-#define PNULL NULL
 #define M_MALLOC (1 << 0)
 #define M_MMAP   (1 << 1)
 #define M_SHARED (1 << 2)

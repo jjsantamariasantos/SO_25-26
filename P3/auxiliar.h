@@ -11,12 +11,11 @@ date: October 2025
 #include "file_list.h"
 #include "mem_list.h"
 #include "background_list.h"
-#include "path_list.h"
 #include "commands.h"
 
 void print_prompt();
 bool read_input(t_lists *L);
-void process_input(t_lists *L, bool *exit_shell);
+void process_input(t_lists *L, bool *exit_shell, type_args args);
 int cut_input(char *input, char *args[]);
 void select_command(type_args args, char *input ,t_lists *L, bool *exit_shell);
 void free_historic_list(t_list_historic *L);
@@ -32,6 +31,5 @@ bool string_to_long(char *string, long *result);
 void free_mem_list(t_list_mem *list);
 void free_lists(t_lists *L);
 void free_background_list(t_list_background *list);
-void free_path_list(t_list_path *list);
 
 #endif /*AUXILIAR_H*/

@@ -62,8 +62,6 @@ typedef t_pos_mem t_list_mem;
 typedef struct t_node_background *t_pos_background;
 typedef t_pos_background t_list_background;
 
-typedef struct t_node_path *t_pos_path;
-typedef t_pos_path t_list_path;
 
 typedef struct t_lists
 {
@@ -71,7 +69,6 @@ typedef struct t_lists
     t_list_file files;
     t_list_mem memory;
     t_list_background background;
-    t_list_path path;
     unsigned char dir_flags;
 } t_lists;
 //* end of forward declaration
