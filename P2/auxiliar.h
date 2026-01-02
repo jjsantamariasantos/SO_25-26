@@ -9,6 +9,7 @@ date: October 2025
 #include "types.h"
 #include "historic_list.h"
 #include "file_list.h"
+#include "mem_list.h"
 #include "commands.h"
 
 

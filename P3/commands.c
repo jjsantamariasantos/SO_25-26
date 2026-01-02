@@ -2614,8 +2614,7 @@ void set_uid_int(int n){
 }
 
 void set_uid_login(type_args args){
-     char *login = args.input[2]; struct passwd *pw = getpwnam(login);
-    
+    char *login = args.input[3]; struct passwd *pw = getpwnam(login);
     if (pw == NULL)
     {
         print_error(args.input[0], "User not found");
@@ -2831,17 +2830,17 @@ void cmd_envvar(type_args args, t_lists *lists){
     }
 
     if((args.length == 5) && (strcmp(args.input[1], "-change") == 0)){
-        if(args.input[1][1] == 'a'){
+        if(args.input[2][1] == 'a'){
             char **envp =args.args_main.envp;
-            if(do_change_var(args.input[2], args.input[3], envp, &lists->memory) == -1)
+            if(do_change_var(args.input[3], args.input[4], envp, &lists->memory) == -1)
                 print_system_error(args.input[0]);
             return;
-        } else if(args.input[1][1] == 'e'){
-            if(do_change_var(args.input[2], args.input[3], environ, &lists->memory) == -1)
+        } else if(args.input[2][1] == 'e'){
+            if(do_change_var(args.input[3], args.input[4], environ, &lists->memory) == -1)
                 print_system_error(args.input[0]);
             return;
-        } else if(args.input[1][1] == 'p'){
-            if(do_put_env(args.input[2], args.input[3], &lists->memory) == -1)
+        } else if(args.input[2][1] == 'p'){
+            if(do_put_env(args.input[3], args.input[4], &lists->memory) == -1)
                 print_system_error(args.input[0]);
             return;
         }
@@ -2850,13 +2849,13 @@ void cmd_envvar(type_args args, t_lists *lists){
     }
 
     if((args.length == 6) && (strcmp(args.input[1], "-subs") == 0)){
-        if(args.input[1][1] == 'a'){
+        if(args.input[2][1] == 'a'){
             char **envp =args.args_main.envp;
-            if(do_subs_vars(args.input[2], args.input[3], args.input[4], envp, &lists->memory) == -1)
+            if(do_subs_vars(args.input[3], args.input[4], args.input[5], envp, &lists->memory) == -1)
                 print_system_error(args.input[0]);
             return;
         } else if(args.input[1][1] == 'e'){
-            if(do_subs_vars(args.input[2], args.input[3], args.input[4], environ, &lists->memory) == -1)
+            if(do_subs_vars(args.input[3], args.input[4], args.input[5], environ, &lists->memory) == -1)
                 print_system_error(args.input[0]);
             return;
         }
